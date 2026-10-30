@@ -1,0 +1,1156 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4d9fc6">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>تفاعل متسلسل</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Layout: full-height stage. Opponent score pill flush left at the top, the board in the middle,
+     my score pill flush right at the bottom, reset X bottom-centre. Menu and lobby are full-screen layers.
+     One committed look (bright sky, cream tiles, red vs cyan discs), so a single theme by choice. */
+  :root {
+    --sky-a: #6bbbdc;
+    --sky-b: #4d9fc6;
+    --tile: #ebeedc;
+    --blue: #00bff0;
+    --blue-d: #0092ba;
+    --red: #ff5f52;
+    --red-d: #d63f33;
+    --ink: #2a303a;
+    --deep: #0f2f40;
+    --paper: #ffffff;
+    --font: "Baloo Bhaijaan 2", "Segoe UI", Tahoma, system-ui, sans-serif;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--sky-b);
+    background-image: radial-gradient(120% 80% at 50% 35%, var(--sky-a), var(--sky-b));
+    color: var(--deep);
+    font-family: var(--font);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 0;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  button, input { font-family: inherit; }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--deep); outline-offset: 3px; }
+  [hidden] { display: none !important; }
+
+  .stage {
+    direction: ltr;
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .boardwrap {
+    position: relative;
+    width: min(100%, 440px, 56vh);
+    aspect-ratio: 1;
+    filter: drop-shadow(0 14px 22px rgba(10, 50, 75, .28));
+  }
+  canvas { display: block; touch-action: none; position: absolute; left: 0; top: 0; }
+
+  .pill {
+    background: var(--ink);
+    border: 7px solid #000;
+    height: 84px;
+    display: flex;
+    align-items: center;
+    transition: opacity .25s;
+    z-index: 3;
+  }
+  .pill.top {
+    position: absolute;
+    top: 14px;
+    left: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+    border-left: 0;
+    border-radius: 0 999px 999px 0;
+    padding: 0 18px 0 calc(max(16px, env(safe-area-inset-left, 0px)) + 4px);
+  }
+  .pill.bot {
+    justify-self: end;
+    margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+    border-right: 0;
+    border-radius: 999px 0 0 999px;
+    padding: 0 calc(max(16px, env(safe-area-inset-right, 0px)) + 4px) 0 18px;
+  }
+  .pill:not(.active) { opacity: .62; }
+  .pill.active { animation: glow 1.4s ease-in-out infinite alternate; }
+  .pill .in { display: flex; align-items: center; gap: 10px; }
+  .pill.flip .in { transform: rotate(180deg); }
+  .pill .num { font-size: 50px; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; min-width: .65em; text-align: center; }
+  .pill .tag { font-size: 15px; font-weight: 700; min-width: 3.4em; text-align: center; }
+  .pill.p1 .num, .pill.p1 .tag { color: var(--red); }
+  .pill.p2 .num, .pill.p2 .tag { color: var(--blue); }
+
+  .bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 14px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    z-index: 3;
+  }
+  .left { display: flex; gap: 8px; align-items: center; justify-self: start; }
+  .chip {
+    height: 44px;
+    min-width: 44px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, .18);
+    transition: transform .08s;
+  }
+  .chip.icon { padding: 0; width: 44px; }
+  .xwrap { position: relative; }
+  .x {
+    width: 76px;
+    height: 76px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--paper);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, .18);
+    transition: transform .08s;
+  }
+  .x:active, .chip:active, .big:active { transform: scale(.94); }
+  .tip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .result { position: absolute; inset: 0; display: grid; place-items: center; z-index: 4; }
+  .card {
+    width: 86%;
+    background: var(--ink);
+    border: 6px solid #000;
+    border-radius: 26px;
+    padding: 16px 16px 18px;
+    display: grid;
+    gap: 10px;
+    justify-items: center;
+    text-align: center;
+    animation: rise .35s cubic-bezier(.3, 1.4, .5, 1);
+  }
+  .card h2 { margin: 0; font-size: 36px; line-height: 1.15; font-weight: 800; }
+  .card h2.flip { transform: rotate(180deg); }
+  .card h2.p1 { color: var(--red); }
+  .card h2.p2 { color: var(--blue); }
+  .big {
+    border: 0;
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 19px;
+    font-weight: 800;
+    padding: 9px 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, .2);
+    transition: transform .08s;
+  }
+  .big.main { background: var(--ink); color: #fff; box-shadow: 0 4px 0 #000; }
+  .big.red { background: var(--red); color: #fff; box-shadow: 0 4px 0 var(--red-d); }
+  .big.blue { background: var(--blue); color: #052a38; box-shadow: 0 4px 0 var(--blue-d); }
+
+  .toast {
+    position: absolute;
+    top: 112px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 700;
+    z-index: 6;
+    animation: rise .25s ease-out;
+    white-space: nowrap;
+  }
+
+  /* menu / lobby layer */
+  .menu {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: var(--sky-b);
+    background-image: radial-gradient(120% 80% at 50% 30%, var(--sky-a), var(--sky-b));
+    display: grid;
+    place-items: center;
+    padding-block: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    overflow-y: auto;
+  }
+  .panel { width: min(100%, 380px); display: grid; gap: 14px; justify-items: stretch; text-align: center; }
+  .logo { display: flex; justify-content: center; gap: 10px; margin: 0 auto 4px; }
+  .logo i { width: 54px; height: 54px; border-radius: 50%; display: block; position: relative; box-shadow: inset 0 -5px 0 rgba(0, 0, 0, .15); }
+  .logo i.r { background: var(--red); }
+  .logo i.b { background: var(--blue); }
+  .logo i::before, .logo i::after { content: ""; position: absolute; width: 9px; height: 9px; background: #fff; border-radius: 50%; top: 22.5px; }
+  .logo i::before { left: 14px; }
+  .logo i::after { right: 14px; }
+  .logo i.one::before { left: 22.5px; }
+  .logo i.one::after { display: none; }
+  h1 { margin: 0; font-size: 44px; line-height: 1.1; font-weight: 800; color: #fff; text-shadow: 0 3px 0 rgba(0, 0, 0, .16); }
+  .sub { margin: 0; font-size: 15px; line-height: 1.6; color: var(--deep); font-weight: 500; text-wrap: balance; }
+  .menu .big { width: 100%; font-size: 20px; padding: 13px 20px; }
+  .row { display: flex; gap: 10px; align-items: stretch; }
+  .row > * { min-width: 0; }
+  .codein {
+    flex: 1;
+    border: 0;
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: .25em;
+    text-align: center;
+    text-transform: uppercase;
+    padding: 8px 10px;
+    direction: ltr;
+    width: 100%;
+  }
+  .codein::placeholder { letter-spacing: .1em; color: #9aa6b2; font-weight: 700; font-size: 17px; }
+  .codebox {
+    background: var(--ink);
+    border: 6px solid #000;
+    border-radius: 26px;
+    padding: 12px 10px 14px;
+    color: #fff;
+    display: grid;
+    gap: 2px;
+  }
+  .codebox small { font-size: 14px; color: #b8c6d3; font-weight: 500; }
+  .codebox b { font-size: 60px; line-height: 1.05; letter-spacing: .16em; direction: ltr; padding-left: .16em; font-weight: 800; }
+  .dots { display: inline-flex; gap: 5px; vertical-align: middle; margin-inline-start: 6px; direction: ltr; }
+  .dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--deep); animation: blink 1.2s infinite; }
+  .dots i:nth-child(2) { animation-delay: .2s; }
+  .dots i:nth-child(3) { animation-delay: .4s; }
+  .err { color: #7a1010; font-weight: 700; font-size: 14px; margin: 0; min-height: 1.2em; }
+  .link { background: none; border: 0; color: var(--deep); font-weight: 700; font-size: 15px; text-decoration: underline; cursor: pointer; padding: 6px; }
+
+  @keyframes glow { from { box-shadow: 0 0 0 2px rgba(255, 255, 255, .45); } to { box-shadow: 0 0 0 7px rgba(255, 255, 255, .9); } }
+  @keyframes rise { from { transform: translate(var(--tx, 0), 10px) scale(.85); opacity: 0; } to { transform: translate(var(--tx, 0), 0) scale(1); opacity: 1; } }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+  .toast { --tx: -50%; }
+  .msgp {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 106px;
+    z-index: 3;
+    background: var(--ink);
+    border: 5px solid #000;
+    border-radius: 22px;
+    padding: 9px 10px 10px;
+    display: grid;
+    gap: 7px;
+    color: #fff;
+  }
+  .msgp .lbl { font-size: 13.5px; font-weight: 700; color: #b8c6d3; }
+  .msgp .mrow { display: flex; gap: 8px; align-items: center; }
+  .msgp input {
+    flex: 1;
+    min-width: 0;
+    height: 40px;
+    border: 0;
+    border-radius: 999px;
+    padding: 0 14px;
+    background: #fff;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 700;
+    direction: ltr;
+    text-align: left;
+  }
+  .msgp .chip { height: 40px; box-shadow: 0 3px 0 rgba(0, 0, 0, .35); }
+  .stage.msg .boardwrap { width: min(100%, 440px, 42vh); margin-top: -60px; }
+  @media (max-height: 640px) { h1 { font-size: 36px; } .logo i { width: 44px; height: 44px; } .logo i::before, .logo i::after { top: 17.5px; } .logo i::before { left: 11px; } .logo i::after { right: 11px; } .logo i.one::before { left: 17.5px; } }
+  @media (prefers-reduced-motion: reduce) { .pill.active, .card, .toast, .dots i { animation: none; } }
+</style>
+
+</head>
+<body>
+<main class="stage" id="stage">
+  <div class="pill top p2 flip" id="pillTop"><div class="in"><span class="tag" id="tagTop" dir="rtl"></span><b class="num" id="scoreTop">0</b></div></div>
+
+  <section class="boardwrap" id="wrap" aria-label="لوحة اللعب">
+    <canvas id="cv"></canvas>
+    <div class="result" id="result" hidden></div>
+  </section>
+
+  <div class="bar">
+    <div class="left">
+      <button class="chip" id="menuBtn" type="button" dir="rtl">القائمة</button>
+      <button class="chip icon" id="sndBtn" type="button" aria-label="الصوت"></button>
+    </div>
+    <div class="xwrap">
+      <div class="tip" id="tip" dir="rtl" hidden></div>
+      <button class="x" id="x" type="button" aria-label="جولة جديدة">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#6d8199" stroke-width="5" stroke-linecap="round" aria-hidden="true"><path d="M8 8l18 18M26 8L8 26"/></svg>
+      </button>
+    </div>
+    <div class="pill bot p1" id="pillBot"><div class="in"><span class="tag" id="tagBot" dir="rtl"></span><b class="num" id="scoreBot">0</b></div></div>
+  </div>
+
+  <div class="msgp" id="msgP" dir="rtl" hidden>
+    <div class="lbl" id="msgLbl">اضغط خانة لتبدأ، أو الصق كود صديقك</div>
+    <div class="mrow"><input id="msgOut" type="text" readonly aria-label="كودك" placeholder="كودك يطلع هنا بعد حركتك"><button class="chip" id="msgCopy" type="button">انسخ</button></div>
+    <div class="mrow"><input id="msgIn" type="text" autocomplete="off" spellcheck="false" aria-label="كود صديقك" placeholder="الصق كود صديقك هنا"><button class="chip" id="msgApply" type="button">طبّق</button></div>
+  </div>
+  <div class="toast" id="toast" dir="rtl" hidden></div>
+</main>
+
+<section class="menu" id="menu" dir="rtl">
+  <div class="panel" id="vHome">
+    <div class="logo" aria-hidden="true"><i class="r"></i><i class="b one"></i><i class="r one"></i></div>
+    <h1>تفاعل متسلسل</h1>
+    <p class="sub">أضف نقاطك، والخانة اللي تمتلئ تنفجر وتحوّل خانات جيرانها إلى لونك. فز لما تخلّي الخصم بلا ولا خانة.</p>
+    <button class="big main" id="bOnline" type="button">العب أونلاين</button>
+    <button class="big" id="bAi" type="button">ضد الجهاز</button>
+    <button class="big" id="bLocal" type="button">لاعبان على نفس الجوال</button>
+    <p class="sub" style="font-size:13.5px">الانفجار: الزوايا عند ٢ نقطة، الأطراف عند ٣، والوسط عند ٤.</p>
+  </div>
+
+  <div class="panel" id="vOnline" hidden>
+    <h1>أونلاين</h1>
+    <p class="sub">ابحث عن لاعب يدوّر مثلك وتبدأ اللعب مباشرة، أو العب مع صديقك بكود غرفة.</p>
+    <button class="big main" id="bFind" type="button" hidden>ابحث عن لاعب</button>
+    <button class="big red" id="bCreate" type="button">أنشئ غرفة لصديقك</button>
+    <div class="row">
+      <input class="codein" id="codeIn" type="text" inputmode="text" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="الكود" aria-label="كود الغرفة">
+      <button class="big blue" id="bJoin" type="button" style="width:auto;padding:9px 26px">انضم</button>
+    </div>
+    <button class="big" id="bMsg" type="button">اللعب بإرسال الأكواد (واتساب أو تلغرام)</button>
+    <p class="err" id="err" role="status"></p>
+    <button class="link" id="bBack1" type="button">رجوع</button>
+  </div>
+
+  <div class="panel" id="vLobby" hidden>
+    <h1 id="lobTitle">بانتظار صديقك</h1>
+    <div class="codebox" id="lobBox"><small>كود الغرفة</small><b id="lobCode">----</b></div>
+    <p class="sub" id="lobText">أرسل الكود لصديقك. يفتح نفس الرابط على جواله ويكتب الكود.<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span></p>
+    <button class="big main" id="bCopy" type="button">انسخ الكود</button>
+    <button class="link" id="bLeave" type="button">إلغاء</button>
+  </div>
+</section>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+(function () {
+  'use strict';
+  /* ضع هنا رابط قاعدة Firebase Realtime Database الخاصة بك، بين علامتي الاقتباس */
+  var FIREBASE_URL = 'https://gini-4debc-default-rtdb.firebaseio.com';
+  var N = 5, SIZE = 25;
+  var $ = function (id) { return document.getElementById(id); };
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- board geometry ---------- */
+  var NB = [];
+  for (var r0 = 0; r0 < N; r0++) for (var c0 = 0; c0 < N; c0++) {
+    var l0 = [];
+    if (r0 > 0) l0.push((r0 - 1) * N + c0);
+    if (r0 < N - 1) l0.push((r0 + 1) * N + c0);
+    if (c0 > 0) l0.push(r0 * N + c0 - 1);
+    if (c0 < N - 1) l0.push(r0 * N + c0 + 1);
+    NB.push(l0);
+  }
+
+  /* ---------- game state ---------- */
+  var own = new Array(SIZE).fill(0), cnt = new Array(SIZE).fill(0);
+  var dOwn = new Array(SIZE).fill(0), dCnt = new Array(SIZE).fill(0);
+  var moved = [0, 0, 0];
+  var cur = 1, over = false, busy = false, pumping = false, lastIdx = -1, gen = 0;
+  var mode = 'local';        // local | ai | online
+  var g = 0;                 // round number; decides who starts
+  var log = '', played = 0;  // every move as one letter: 'a' + cell index
+  var aiTimer = 0, winner = 0;
+
+  /* ---------- online state ---------- */
+  var room = null, code = '', seat = 0, joinedAt = 0, gameShown = false, lastOpp = false;
+
+  function starterFor(round) { return round % 2 === 0 ? 1 : 2; }
+  function countOf(a, p) { var n = 0; for (var i = 0; i < SIZE; i++) if (a[i] === p) n++; return n; }
+
+  /* ---------- sound + haptics ---------- */
+  var ac = null, muted = false;
+  try { muted = localStorage.getItem('cr-muted') === '1'; } catch (e) {}
+  function unlock() {
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } }
+    if (ac && ac.state === 'suspended') { ac.resume().catch(function () {}); }
+  }
+  function tone(f, dur, type, vol, f2, delay) {
+    if (muted || !ac) return;
+    var t = ac.currentTime + (delay || 0);
+    var o = ac.createOscillator(), gn = ac.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f, t);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    gn.gain.setValueAtTime(0.0001, t);
+    gn.gain.exponentialRampToValueAtTime(vol || 0.15, t + 0.012);
+    gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(gn); gn.connect(ac.destination);
+    o.start(t); o.stop(t + dur + 0.03);
+  }
+  var sfx = {
+    place: function () { tone(480, 0.13, 'sine', 0.16, 760); },
+    burst: function (w) { var k = Math.min(w, 9); tone(170 + k * 38, 0.2, 'triangle', 0.2, 80); tone(620 + k * 70, 0.09, 'sine', 0.08, 1100); },
+    land: function () { tone(900, 0.05, 'sine', 0.05, 600); },
+    deny: function () { tone(150, 0.14, 'square', 0.07, 110); },
+    win: function () { [523, 659, 784, 1047].forEach(function (f, i) { tone(f, 0.28, 'triangle', 0.17, null, i * 0.11); }); },
+    lose: function () { [392, 330, 262].forEach(function (f, i) { tone(f, 0.3, 'triangle', 0.14, null, i * 0.14); }); }
+  };
+  function buzz(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
+  function drawSnd() {
+    $('sndBtn').innerHTML = muted
+      ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2a303a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>'
+      : '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2a303a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12"/></svg>';
+    $('sndBtn').setAttribute('aria-pressed', muted ? 'true' : 'false');
+  }
+  $('sndBtn').addEventListener('click', function () {
+    muted = !muted;
+    try { localStorage.setItem('cr-muted', muted ? '1' : '0'); } catch (e) {}
+    drawSnd();
+  });
+  drawSnd();
+  document.addEventListener('pointerdown', unlock, true);
+
+  /* ---------- canvas rendering ---------- */
+  var cv = $('cv'), ctx = cv.getContext('2d');
+  var W = 300, dpr = 1, cs = 50, gp = 6;
+  var tileC = [], dScale = [], kick = [], colOwn = [];
+  var BASE = [235, 238, 220], TINT = { 1: [250, 216, 205], 2: [170, 228, 244] };
+  var PAL = {
+    1: { m: '#ff5f52', l: '#ff9d90', d: '#d03a2e' },
+    2: { m: '#00bff0', l: '#7ae3ff', d: '#0090b8' }
+  };
+  for (var q = 0; q < SIZE; q++) { tileC.push(BASE.slice()); dScale.push(0); kick.push(0); colOwn.push(1); }
+  var flyers = [], parts = [];
+
+  function fit() {
+    var rc = $('wrap').getBoundingClientRect();
+    W = Math.max(200, Math.round(rc.width));
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(W * dpr);
+    cv.style.width = W + 'px'; cv.style.height = W + 'px';
+    gp = Math.round(W * 0.022);
+    cs = (W - gp * 4) / 5;
+  }
+  var fitQ = 0;
+  function fitSoon() { if (fitQ) return; fitQ = requestAnimationFrame(function () { fitQ = 0; fit(); }); }
+  if (window.ResizeObserver) new ResizeObserver(fitSoon).observe($('wrap'));
+  window.addEventListener('resize', fit);
+
+  function rr(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function cx(i) { return (i % N) * (cs + gp) + cs / 2; }
+  function cy(i) { return Math.floor(i / N) * (cs + gp) + cs / 2; }
+  function mix(a, b, k) { return a + (b - a) * k; }
+  var DOT = {
+    1: [[0, 0]],
+    2: [[-0.5, 0], [0.5, 0]],
+    3: [[-0.5, -0.34], [0.5, -0.34], [0, 0.5]],
+    4: [[-0.5, -0.46], [0.5, -0.46], [-0.5, 0.46], [0.5, 0.46]]
+  };
+
+  function disc(x, y, R, pal, n, sq) {
+    ctx.fillStyle = 'rgba(20,50,70,.20)';
+    ctx.beginPath(); ctx.ellipse(x, y + R * 0.2, R * 0.98, R * 0.9, 0, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = pal.d;
+    ctx.beginPath(); ctx.arc(x, y + R * 0.08, R, 0, 6.2832); ctx.fill();
+    var gr = ctx.createRadialGradient(x - R * 0.35, y - R * 0.4, R * 0.1, x, y, R);
+    gr.addColorStop(0, pal.l); gr.addColorStop(0.55, pal.m); gr.addColorStop(1, pal.m);
+    ctx.fillStyle = gr;
+    ctx.beginPath(); ctx.arc(x, y, R, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.35)';
+    ctx.beginPath(); ctx.ellipse(x - R * 0.36, y - R * 0.5, R * 0.3, R * 0.15, -0.6, 0, 6.2832); ctx.fill();
+    if (n > 0) {
+      var pat = DOT[Math.min(n, 4)], dr = R * 0.17 * sq, sp = R * 0.34;
+      ctx.fillStyle = '#fff';
+      for (var k = 0; k < pat.length; k++) {
+        ctx.beginPath(); ctx.arc(x + pat[k][0] * sp, y + pat[k][1] * sp, dr, 0, 6.2832); ctx.fill();
+      }
+    }
+  }
+
+  function update(dt) {
+    var kt = 1 - Math.exp(-dt * 13), ks = Math.exp(-dt * 8), sc = 1 - Math.exp(-dt * 20);
+    for (var i = 0; i < SIZE; i++) {
+      var tg = dOwn[i] ? TINT[dOwn[i]] : BASE, c = tileC[i];
+      c[0] = mix(c[0], tg[0], kt); c[1] = mix(c[1], tg[1], kt); c[2] = mix(c[2], tg[2], kt);
+      kick[i] *= ks;
+      dScale[i] = mix(dScale[i], dCnt[i] > 0 ? 1 : 0, sc);
+      if (dOwn[i]) colOwn[i] = dOwn[i];
+    }
+    for (var p = parts.length - 1; p >= 0; p--) {
+      var pt = parts[p];
+      pt.life -= dt;
+      if (pt.life <= 0) { parts.splice(p, 1); continue; }
+      pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vx *= 0.94; pt.vy *= 0.94;
+    }
+  }
+
+  function draw(t, nowMs) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, W);
+    var i, x, y, R;
+    for (i = 0; i < SIZE; i++) {
+      x = (i % N) * (cs + gp); y = Math.floor(i / N) * (cs + gp);
+      var c = tileC[i];
+      ctx.fillStyle = 'rgba(40,70,90,.22)';
+      rr(x, y + cs * 0.05, cs, cs, cs * 0.18); ctx.fill();
+      ctx.fillStyle = 'rgb(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ')';
+      rr(x, y, cs, cs, cs * 0.18); ctx.fill();
+      if (i === lastIdx && !over) {
+        ctx.strokeStyle = 'rgba(255,255,255,' + (0.6 + 0.4 * Math.sin(t * 5)).toFixed(2) + ')';
+        ctx.lineWidth = Math.max(2, cs * 0.05);
+        rr(x + 1.5, y + 1.5, cs - 3, cs - 3, cs * 0.16); ctx.stroke();
+      }
+    }
+    for (i = 0; i < SIZE; i++) {
+      if (dScale[i] < 0.02) continue;
+      var n = dCnt[i], crit = n === NB[i].length - 1;
+      var pul = crit ? 1 + 0.045 * Math.sin(t * 11 + i) : 1;
+      R = cs * 0.355 * dScale[i] * (1 + kick[i] * 0.2) * pul;
+      var sx = crit ? Math.sin(t * 38 + i * 3) * cs * 0.012 : 0;
+      disc(cx(i) + sx, cy(i), R, PAL[colOwn[i]], n, Math.min(1, dScale[i] * 1.3));
+    }
+    for (var f = 0; f < flyers.length; f++) {
+      var fl = flyers[f], u = (nowMs - fl.t0) / fl.dur;
+      if (u < 0) continue;
+      if (u > 1) u = 1;
+      var e = u * u * (3 - 2 * u);
+      var fx = mix(fl.x0, fl.x1, e), fy = mix(fl.y0, fl.y1, e) - Math.sin(u * Math.PI) * cs * 0.16;
+      var fr = cs * 0.15 * (1 + 0.15 * Math.sin(u * Math.PI));
+      ctx.fillStyle = 'rgba(255,255,255,.95)';
+      ctx.beginPath(); ctx.arc(fx, fy, fr + cs * 0.025, 0, 6.2832); ctx.fill();
+      var gr = ctx.createRadialGradient(fx - fr * 0.3, fy - fr * 0.35, fr * 0.1, fx, fy, fr);
+      gr.addColorStop(0, PAL[fl.p].l); gr.addColorStop(1, PAL[fl.p].m);
+      ctx.fillStyle = gr;
+      ctx.beginPath(); ctx.arc(fx, fy, fr, 0, 6.2832); ctx.fill();
+    }
+    for (var p = 0; p < parts.length; p++) {
+      var pt = parts[p];
+      ctx.globalAlpha = Math.max(0, Math.min(1, pt.life / pt.max));
+      ctx.fillStyle = pt.col;
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r * (0.4 + 0.6 * (pt.life / pt.max)), 0, 6.2832); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  var lastT = performance.now();
+  function frame(now) {
+    var dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
+    update(dt);
+    draw(now / 1000, now);
+    requestAnimationFrame(frame);
+  }
+
+  function spawnParts(i, p) {
+    if (reduce) return;
+    for (var k = 0; k < 9; k++) {
+      var a = Math.random() * 6.2832, s = cs * (1.2 + Math.random() * 1.6);
+      parts.push({ x: cx(i), y: cy(i), vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.42, max: 0.42, r: cs * (0.03 + Math.random() * 0.035), col: k % 3 ? PAL[p].l : '#fff' });
+    }
+  }
+  function confetti() {
+    if (reduce) return;
+    for (var k = 0; k < 70; k++) {
+      var a = Math.random() * 6.2832, s = W * (0.25 + Math.random() * 0.9);
+      parts.push({ x: W / 2, y: W / 2, vx: Math.cos(a) * s, vy: Math.sin(a) * s - W * 0.3, life: 1.1, max: 1.1, r: cs * (0.04 + Math.random() * 0.05), col: ['#ff5f52', '#00bff0', '#fff', '#ffd54a'][k % 4] });
+    }
+  }
+
+  /* ---------- rules engine (animated) ---------- */
+  function sleep(ms) { return new Promise(function (res) { setTimeout(res, ms); }); }
+  function checkWin(o, p, mv) {
+    var q = 3 - p;
+    return (mv[q] > 0 && mv[p] > 0 && countOf(o, q) === 0) ? p : 0;
+  }
+  function syncDisp() { for (var i = 0; i < SIZE; i++) { dOwn[i] = own[i]; dCnt[i] = cnt[i]; } }
+
+  async function applyMove(idx, p) {
+    var G = gen;
+    busy = true;
+    moved[p]++; cnt[idx]++; own[idx] = p; lastIdx = idx;
+    syncDisp(); kick[idx] = 1; sfx.place(); buzz(8); hud();
+    var wave = 0, win = 0;
+    for (var guard = 0; guard < 400; guard++) {
+      var un = [];
+      for (var i = 0; i < SIZE; i++) if (cnt[i] >= NB[i].length) un.push(i);
+      if (!un.length) break;
+      wave++;
+      var dur = reduce ? 1 : (wave > 6 ? 150 : 235), now = performance.now();
+      sfx.burst(wave);
+      for (var k = 0; k < un.length; k++) {
+        var a = un[k];
+        kick[a] = 1; spawnParts(a, p);
+        dCnt[a] -= NB[a].length; if (dCnt[a] <= 0) { dCnt[a] = 0; dOwn[a] = 0; }
+        for (var m = 0; m < NB[a].length; m++) {
+          var b = NB[a][m];
+          flyers.push({ x0: cx(a), y0: cy(a), x1: cx(b), y1: cy(b), t0: now, dur: dur, p: p });
+        }
+      }
+      hud();
+      await sleep(dur);
+      if (G !== gen) return 0;
+      flyers.length = 0;
+      for (var k2 = 0; k2 < un.length; k2++) {
+        var a2 = un[k2];
+        cnt[a2] -= NB[a2].length;
+        if (cnt[a2] === 0) own[a2] = 0;
+        for (var m2 = 0; m2 < NB[a2].length; m2++) { cnt[NB[a2][m2]]++; own[NB[a2][m2]] = p; kick[NB[a2][m2]] = 0.7; }
+      }
+      syncDisp(); sfx.land(); hud();
+      win = checkWin(own, p, moved);
+      if (win) break;
+      await sleep(30);
+      if (G !== gen) return 0;
+    }
+    busy = false;
+    if (win) { finish(win); return win; }
+    cur = 3 - p;
+    hud();
+    return 0;
+  }
+
+  /* ---------- computer opponent ---------- */
+  function resolveSim(o, c, p, mv) {
+    for (var w = 0; w < 300; w++) {
+      var un = [];
+      for (var i = 0; i < SIZE; i++) if (c[i] >= NB[i].length) un.push(i);
+      if (!un.length) return 0;
+      for (var k = 0; k < un.length; k++) {
+        var a = un[k];
+        c[a] -= NB[a].length;
+        if (c[a] === 0) o[a] = 0;
+        for (var m = 0; m < NB[a].length; m++) { c[NB[a][m]]++; o[NB[a][m]] = p; }
+      }
+      var win = checkWin(o, p, mv);
+      if (win) return win;
+    }
+    return 0;
+  }
+  function legalOf(o, p) { var l = []; for (var i = 0; i < SIZE; i++) if (o[i] === 0 || o[i] === p) l.push(i); return l; }
+  function bestMove(p) {
+    var q = 3 - p, best = -1e9, picks = [], moves = legalOf(own, p);
+    for (var a = 0; a < moves.length; a++) {
+      var m = moves[a];
+      var o = own.slice(), c = cnt.slice(), mv = moved.slice();
+      mv[p]++; c[m]++; o[m] = p;
+      var w = resolveSim(o, c, p, mv), score;
+      if (w === p) score = 1000;
+      else {
+        var worst = 1e9, replies = legalOf(o, q);
+        for (var b = 0; b < replies.length; b++) {
+          var r = replies[b], o2 = o.slice(), c2 = c.slice(), mv2 = mv.slice();
+          mv2[q]++; c2[r]++; o2[r] = q;
+          var w2 = resolveSim(o2, c2, q, mv2);
+          var s = w2 === q ? -1000 : countOf(o2, p) - countOf(o2, q);
+          if (s < worst) worst = s;
+        }
+        score = worst + countOf(o, p) * 0.1 + Math.random() * 0.6;
+      }
+      if (score > best + 1e-9) { best = score; picks = [m]; }
+      else if (Math.abs(score - best) <= 1e-9) picks.push(m);
+    }
+    return picks[Math.floor(Math.random() * picks.length)];
+  }
+  function scheduleAi(ms) {
+    clearTimeout(aiTimer);
+    aiTimer = setTimeout(function () {
+      if (mode !== 'ai' || over || busy || pumping || cur !== 2) return;
+      log += String.fromCharCode(97 + bestMove(2));
+      pump();
+    }, ms);
+  }
+
+  /* ---------- move queue: one path for local, computer and online ---------- */
+  async function pump() {
+    if (pumping) return;
+    pumping = true;
+    var G = gen;
+    while (played < log.length && !over) {
+      var idx = log.charCodeAt(played) - 97;
+      played++;
+      if (idx < 0 || idx >= SIZE) continue;
+      var p = cur;
+      if (own[idx] && own[idx] !== p) continue;
+      await applyMove(idx, p);
+      if (G !== gen) return;
+    }
+    pumping = false;
+    hud();
+    if (mode === 'ai' && !over && cur === 2 && played === log.length) scheduleAi(550);
+  }
+
+  function resetBoard() {
+    gen++;
+    clearTimeout(aiTimer);
+    pumping = false; busy = false;
+    own.fill(0); cnt.fill(0); moved = [0, 0, 0];
+    log = ''; played = 0; over = false; winner = 0; lastIdx = -1;
+    cur = starterFor(g);
+    flyers.length = 0; parts.length = 0;
+    syncDisp();
+    $('result').hidden = true; $('result').innerHTML = '';
+    disarm();
+    hud();
+  }
+
+  function tap(idx) {
+    if (over || busy || pumping || played < log.length) return;
+    if (mode === 'ai' && cur !== 1) return;
+    if (mode === 'msg') { if (seat === 0) seat = cur; if (seat !== cur) return; }
+    if (mode === 'online' && (seat < 1 || seat !== cur || !oppPresent())) return;
+    if (own[idx] && own[idx] !== cur) { sfx.deny(); buzz(20); shake(idx); return; }
+    log += String.fromCharCode(97 + idx);
+    if (mode === 'online') publish();
+    pump();
+  }
+  function shake(i) { kick[i] = -0.7; }
+
+  function cellAt(ev) {
+    var rc = cv.getBoundingClientRect();
+    var px = (ev.clientX - rc.left) * (W / rc.width), py = (ev.clientY - rc.top) * (W / rc.height);
+    var col = Math.floor(px / (cs + gp)), row = Math.floor(py / (cs + gp));
+    if (col < 0 || col >= N || row < 0 || row >= N) return -1;
+    return row * N + col;
+  }
+  cv.addEventListener('pointerdown', function (ev) {
+    ev.preventDefault();
+    var i = cellAt(ev);
+    if (i >= 0) tap(i);
+  });
+
+  /* ---------- HUD ---------- */
+  function me() { return (mode === 'online' || mode === 'msg') ? (seat || 1) : 1; }
+  function refreshMsg() {
+    var on = mode === 'msg' && $('menu').hidden;
+    $('msgP').hidden = !on;
+    $('stage').classList.toggle('msg', on);
+    if (!on) return;
+    var out = $('msgOut');
+    if (seat > 0 && !busy && !pumping) {
+      out.value = 'CR-' + seat + '-' + g + '-' + log;
+      $('msgLbl').textContent = (!over && cur !== seat) ? 'أرسل هذا الكود لصديقك، وبعدها الصق كوده' : 'كودك الحالي';
+    } else if (seat === 0) {
+      out.value = '';
+      $('msgLbl').textContent = 'اضغط خانة لتبدأ أنت، أو الصق كود صديقك';
+    }
+  }
+  function applyCode(txt) {
+    var m = /^CR-([12])-(\d+)-([a-y]*)$/.exec((txt || '').trim());
+    if (!m) { toast('الكود غير صحيح'); return; }
+    if (busy || pumping) { toast('استنى لين تخلص الحركة'); return; }
+    var sender = +m[1], rg = +m[2], rlog = m[3], joined = false;
+    if (seat === 0) { seat = 3 - sender; joined = true; }
+    else if (seat === sender) { toast('هذا كودك أنت. الصق كود صديقك'); return; }
+    if (rg > g) { g = rg; resetBoard(); log = rlog; }
+    else if (rg === g && rlog.length > log.length && rlog.indexOf(log) === 0) { log = rlog; }
+    else if (!joined) { toast('هذا كود قديم'); return; }
+    $('msgIn').value = '';
+    toast(joined ? 'انضممت: أنت ' + (seat === 1 ? 'الأحمر' : 'الأزرق') : 'وصلت حركة صديقك');
+    if (played < log.length) pump(); else hud();
+  }
+  function hud() {
+    var mine = me(), opp = 3 - mine;
+    var pb = $('pillBot'), pt = $('pillTop');
+    pb.className = 'pill bot p' + mine + (!over && cur === mine ? ' active' : '');
+    pt.className = 'pill top p' + opp + (mode === 'local' ? ' flip' : '') + (!over && cur === opp ? ' active' : '');
+    $('scoreBot').textContent = countOf(dOwn, mine);
+    $('scoreTop').textContent = countOf(dOwn, opp);
+    var tb = '', tt = '';
+    if (!over) {
+      if (mode === 'local') { tb = cur === 1 ? 'دورك' : ''; tt = cur === 2 ? 'دورك' : ''; }
+      else if (mode === 'ai') { tb = cur === 1 ? 'دورك' : ''; tt = cur === 2 ? 'يفكر…' : ''; }
+      else { tb = cur === mine ? 'دورك' : ''; tt = cur === opp ? 'دور خصمك' : ''; }
+    }
+    $('tagBot').textContent = tb; $('tagTop').textContent = tt;
+    refreshMsg();
+  }
+
+  function finish(w) {
+    over = true; winner = w; busy = false; pumping = false;
+    var text, mineWon = (w === me());
+    if (mode === 'local') text = w === 1 ? 'فاز الأحمر!' : 'فاز الأزرق!';
+    else if (mode === 'ai') text = mineWon ? 'فزت!' : 'فاز الجهاز';
+    else text = mineWon ? 'فزت!' : 'فاز خصمك';
+    var h = '<div class="card" dir="rtl">';
+    if (mode === 'local') h += '<h2 class="flip p' + w + '">' + text + '</h2>';
+    h += '<h2 class="p' + w + '">' + text + '</h2>';
+    h += '<button class="big" id="again" type="button">جولة جديدة</button></div>';
+    $('result').innerHTML = h;
+    $('result').hidden = false;
+    $('again').addEventListener('click', newRound);
+    if (mode === 'local' || mineWon) { sfx.win(); confetti(); buzz([20, 40, 20]); } else { sfx.lose(); }
+    hud();
+  }
+
+  function newRound() {
+    g++;
+    resetBoard();
+    if (mode === 'online') publish();
+    if (mode === 'ai' && cur === 2) scheduleAi(700);
+  }
+
+  /* two taps to confirm: confirm() is unavailable inside an artifact */
+  var armed = false, armT = 0;
+  function disarm() { armed = false; clearTimeout(armT); $('tip').hidden = true; }
+  $('x').addEventListener('click', function () {
+    if (over || played === 0) { newRound(); return; }
+    if (mode === 'online' && !oppPresent()) { newRound(); return; }
+    if (!armed) {
+      armed = true;
+      $('tip').textContent = 'اضغط مرة ثانية للإعادة';
+      $('tip').hidden = false;
+      armT = setTimeout(disarm, 2600);
+    } else { newRound(); }
+  });
+
+  var toastT = 0;
+  function toast(msg) {
+    var t = $('toast');
+    t.textContent = msg; t.hidden = false;
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { t.hidden = true; }, 2400);
+  }
+
+  /* ---------- menu ---------- */
+  function view(v) {
+    ['Home', 'Online', 'Lobby'].forEach(function (n) { $('v' + n).hidden = (n !== v); });
+    $('menu').hidden = false;
+  }
+  function startLocal(m) {
+    leaveRoom();
+    mode = m; g = 0; seat = 0;
+    resetBoard();
+    $('menu').hidden = true;
+    if (mode === 'ai' && cur === 2) scheduleAi(700);
+  }
+  $('bAi').addEventListener('click', function () { startLocal('ai'); });
+  $('bLocal').addEventListener('click', function () { startLocal('local'); });
+  $('bOnline').addEventListener('click', function () {
+    $('err').textContent = '';
+    if (!(window.claude && window.claude.use) && !FB_OK) { $('bMsg').click(); toast('من الملف المحفوظ اللعب يكون بإرسال الأكواد'); return; }
+    view('Online');
+    roomReady.then(function (rm) { $('bFind').hidden = !(rm && rm.transact); });
+  });
+  $('bBack1').addEventListener('click', function () { view('Home'); });
+  $('bMsg').addEventListener('click', function () {
+    leaveRoom();
+    mode = 'msg'; g = 0; seat = 0;
+    resetBoard();
+    $('menu').hidden = true;
+    hud();
+  });
+  $('msgApply').addEventListener('click', function () { applyCode($('msgIn').value); });
+  $('msgIn').addEventListener('input', function (e) { if (/^\s*CR-[12]-\d+-[a-y]*\s*$/.test(e.target.value)) applyCode(e.target.value); });
+  $('msgCopy').addEventListener('click', function () {
+    var o = $('msgOut');
+    if (!o.value) { toast('اعمل حركتك أول، وبعدها انسخ الكود'); return; }
+    var fallback = function () { o.focus(); o.select(); toast('حدّد الكود وانسخه'); };
+    try { navigator.clipboard.writeText(o.value).then(function () { toast('تم نسخ الكود'); }, fallback); } catch (e) { fallback(); }
+  });
+  $('menuBtn').addEventListener('click', function () { clearTimeout(aiTimer); leaveRoom(); view('Home'); });
+
+  var ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  function randCode() { var s = ''; for (var i = 0; i < 4; i++) s += ALPHA.charAt(Math.floor(Math.random() * ALPHA.length)); return s; }
+  $('codeIn').addEventListener('input', function (e) {
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+  });
+  /* wait for the room capability (it can arrive a moment after the page loads) and say why when it never does */
+  function withRoom(go) {
+    var e = $('err');
+    e.textContent = 'جاري الاتصال…';
+    roomReady.then(function (rm) {
+      if (rm) { e.textContent = ''; go(); return; }
+      e.textContent = roomProblem || 'اللعب أونلاين غير متاح لك الآن. افتح الرابط من حساب Claude مسجّل دخول، وتأكد من اتصال الإنترنت.';
+    });
+  }
+  $('bCreate').addEventListener('click', function () { withRoom(function () { enterRoom(randCode(), true); }); });
+  $('bJoin').addEventListener('click', function () {
+    var c = $('codeIn').value.trim().toUpperCase();
+    if (c.length !== 4) { $('err').textContent = 'اكتب الكود المكوّن من ٤ خانات'; return; }
+    withRoom(function () { enterRoom(c, false); });
+  });
+  $('bLeave').addEventListener('click', function () { leaveRoom(); view('Online'); });
+  $('bFind').addEventListener('click', function () { withRoom(findMatch); });
+  $('bCopy').addEventListener('click', function () {
+    var done = function () { toast('تم نسخ الكود'); };
+    try { navigator.clipboard.writeText(code).then(done, function () { toast('الكود: ' + code); }); }
+    catch (e) { toast('الكود: ' + code); }
+  });
+
+  /* ---------- online ---------- */
+  function publish() {
+    if (!room || !code) return;
+    room.presence({ code: code, seat: seat, g: g, log: log }).catch(function () {});
+  }
+  var hostWaiting = false, matchTimer = 0;
+  function cancelWaiting() {
+    clearTimeout(matchTimer);
+    if (hostWaiting && room && room.transact) {
+      hostWaiting = false;
+      var me = room.id;
+      room.transact('matchmaking/waiting', function (cur) { return (cur && cur.id === me) ? null : undefined; }).catch(function () {});
+      room.cancelDrop('matchmaking/waiting');
+    }
+    hostWaiting = false;
+  }
+  function leaveRoom() {
+    cancelWaiting();
+    if (room && code) { try { room.presence({ code: null, seat: null, g: null, log: null }).catch(function () {}); } catch (e) {} }
+    code = ''; seat = 0; gameShown = false; lastOpp = false;
+  }
+  function enterRoom(c, create, preSeat, auto) {
+    leaveRoom();
+    mode = 'online'; code = c; seat = create ? 1 : (preSeat || 0); g = 0; joinedAt = Date.now();
+    resetBoard();
+    $('lobCode').textContent = c;
+    if (auto) showLobby(create ? 'ندوّر لك على لاعب' : 'لقينا لاعب', create ? 'لحظات ويدخل عليك خصم…' : 'نجهّز اللعبة…');
+    else showLobby(create ? 'بانتظار صديقك' : 'جاري الانضمام', create ? 'أرسل الكود لصديقك. يفتح نفس الرابط على جواله ويكتب الكود.' : 'نبحث عن الغرفة…');
+    $('lobBox').hidden = !!auto; $('bCopy').hidden = !!auto;
+    publish();
+    if (!create && !preSeat) setTimeout(evalRoom, 1600);
+  }
+
+  /* matchmaking: one shared "waiting" slot. The first player fills it, the next one takes it and joins that room. */
+  function findMatch() {
+    if (!room || !room.transact) return;
+    var myCode = randCode(), taken = null, me = room.id;
+    showLobby('ندوّر لك على لاعب', 'لحظات…');
+    $('lobBox').hidden = true; $('bCopy').hidden = true;
+    room.transact('matchmaking/waiting', function (cur) {
+      taken = null;
+      if (cur && cur.id !== me && cur.code) { taken = cur; return null; }
+      return { id: me, code: myCode };
+    }).then(function (r) {
+      if (!r.committed) { $('err').textContent = 'تعذّر البحث، حاول مرة ثانية'; view('Online'); return; }
+      if (taken) {
+        var theirs = taken.code;
+        enterRoom(theirs, false, 2, true);
+        matchTimer = setTimeout(function () {
+          if (!gameShown && code === theirs) { leaveRoom(); findMatch(); }
+        }, 9000);
+      } else {
+        room.dropOnDisconnect('matchmaking/waiting');
+        enterRoom(myCode, true, 0, true);
+        hostWaiting = true;
+      }
+    }).catch(function () { $('err').textContent = 'تعذّر الاتصال بقاعدة البيانات. تأكد من القواعد والرابط.'; view('Online'); });
+  }
+  function showLobby(title, text) {
+    $('lobTitle').textContent = title;
+    $('lobText').innerHTML = '';
+    $('lobText').appendChild(document.createTextNode(text));
+    var d = document.createElement('span'); d.className = 'dots'; d.setAttribute('aria-hidden', 'true'); d.innerHTML = '<i></i><i></i><i></i>';
+    $('lobText').appendChild(d);
+    view('Lobby');
+  }
+  function peersInRoom() {
+    var out = [];
+    if (!room) return out;
+    var ps = room.peers();
+    for (var i = 0; i < ps.length; i++) {
+      var s = ps[i].presence;
+      if (!ps[i].sameTab && s && s.code === code && code) out.push(s);
+    }
+    return out;
+  }
+  function oppPresent() {
+    if (seat < 1) return false;
+    var ps = peersInRoom();
+    for (var i = 0; i < ps.length; i++) if (ps[i].seat === 3 - seat) return true;
+    return false;
+  }
+  function evalRoom() {
+    if (mode !== 'online' || !code || !room) return;
+    var ps = peersInRoom(), taken = {}, i;
+    for (i = 0; i < ps.length; i++) if (ps[i].seat === 1 || ps[i].seat === 2) taken[ps[i].seat] = true;
+
+    if (seat === 0) {
+      if (Date.now() - joinedAt < 1500) return;
+      if (!ps.length) { showLobby('ما لقينا الغرفة', 'تأكد من الكود، أو اطلب من صديقك ينشئ غرفة ويبقى فاتحها.'); return; }
+      if (!taken[1]) seat = 1; else if (!taken[2]) seat = 2;
+      else { showLobby('الغرفة ممتلئة', 'فيها لاعبان بالفعل.'); return; }
+      publish();
+    }
+
+    // adopt the newest round / the longest consistent move list
+    for (i = 0; i < ps.length; i++) {
+      var s = ps[i];
+      if (typeof s.g !== 'number' || typeof s.log !== 'string') continue;
+      if (s.g > g) { g = s.g; resetBoard(); log = s.log; }
+      else if (s.g === g && s.log.length > log.length && s.log.indexOf(log) === 0) { log = s.log; }
+    }
+
+    var opp = oppPresent();
+    if (opp && seat > 0) {
+      if (!gameShown) {
+        gameShown = true;
+        if (hostWaiting && room && room.cancelDrop) { room.cancelDrop('matchmaking/waiting'); hostWaiting = false; clearTimeout(matchTimer); }
+        $('menu').hidden = true;
+        toast('لقينا خصم! ' + (cur === seat ? 'تبدأ أنت' : 'يبدأ هو'));
+        sfx.place();
+      } else if (!lastOpp) {
+        $('menu').hidden = true;
+        toast('عاد خصمك');
+      }
+      if (played < log.length) pump();
+    } else if (gameShown) {
+      showLobby('خصمك غير متصل', 'نبقى بانتظاره. اللعبة تكمل من حيث وقفت.');
+    }
+    lastOpp = opp;
+    hud();
+  }
+
+  /* ---------- Firebase transport (used when the page is opened outside Claude) ---------- */
+  var FB_OK = (typeof firebase !== 'undefined') && /^https:\/\/[^ ]+$/.test(FIREBASE_URL) && FIREBASE_URL.indexOf('YOUR-PROJECT') < 0;
+
+  function makeFirebaseRoom(url) {
+    var app = firebase.initializeApp({ databaseURL: url });
+    var db = firebase.database(app);
+    var myId = Math.random().toString(36).slice(2, 10);
+    var my = {}, code = null, ref = null, snap = [], peersH = [], errH = [], connH = [], isConn = false;
+
+    function build(val) {
+      var a = [];
+      Object.keys(val || {}).forEach(function (k) {
+        var pr = val[k];
+        if (!pr || typeof pr !== 'object') return;
+        a.push({ peer: k, presence: pr, isMe: k === myId, sameTab: k === myId, kind: 'viewer', guest: false, by: null, updatedAt: Date.now() });
+      });
+      return a;
+    }
+    function fire() { peersH.forEach(function (h) { try { h({ peers: snap, joined: [], left: [], updated: [] }); } catch (e) {} }); }
+    function fail(er) { errH.forEach(function (h) { try { h({ code: (er && er.code) || 'upstream_error', message: String(er && er.message || er) }); } catch (e) {} }); }
+    function detach() {
+      if (ref) {
+        try { ref.off(); ref.child(myId).remove(); } catch (e) {}
+      }
+      ref = null; code = null; snap = []; fire();
+    }
+    function attach(c) {
+      detach();
+      if (!c) return;
+      code = c;
+      ref = db.ref('rooms/' + c);
+      ref.on('value', function (s) { snap = build(s.val()); fire(); }, fail);
+      ref.child(myId).onDisconnect().remove();
+    }
+    db.ref('.info/connected').on('value', function (s) {
+      isConn = !!s.val();
+      connH.forEach(function (h) { try { h(isConn); } catch (e) {} });
+      if (isConn && ref) { ref.child(myId).onDisconnect().remove(); ref.child(myId).set(my); }
+    });
+
+    return {
+      peers: function () { return snap; },
+      onPeers: function (h, e) { peersH.push(h); if (e) errH.push(e); return function () { peersH = peersH.filter(function (x) { return x !== h; }); }; },
+      onConnection: function (h) { connH.push(h); h(isConn); return function () {}; },
+      connected: function () { return isConn; },
+      emit: function () { return Promise.resolve(); },
+      id: myId,
+      transact: function (path, fn) {
+        return db.ref(path).transaction(fn).then(function (r) { return { committed: r.committed, val: r.snapshot.val() }; });
+      },
+      dropOnDisconnect: function (path) { try { db.ref(path).onDisconnect().remove(); } catch (e) {} },
+      cancelDrop: function (path) { try { db.ref(path).onDisconnect().cancel(); } catch (e) {} },
+      presence: function (patch) {
+        Object.keys(patch).forEach(function (k) { if (patch[k] === null) delete my[k]; else my[k] = patch[k]; });
+        var c = my.code || null;
+        if (c !== code) attach(c);
+        if (!ref) return Promise.resolve();
+        return ref.child(myId).set(my);
+      }
+    };
+  }
+
+  /* ---------- boot ---------- */
+  fit();
+  resetBoard();
+  requestAnimationFrame(frame);
+  view('Home');
+
+  var roomProblem = '';
+  var roomReady = new Promise(function (resolve) {
+    var done = false;
+    var finish = function (rm) { if (!done) { done = true; resolve(rm); } };
+    var hook = function (rm) {
+      room = rm;
+      room.onPeers(function () { evalRoom(); }, function (er) {
+        roomProblem = 'انقطع اتصال الغرفة' + (er && er.code ? ' (' + er.code + ')' : '') + '. أعد فتح الصفحة.';
+        if (mode === 'online') toast('انقطع الاتصال');
+      });
+      room.onConnection(function (ok) { if (!ok && mode === 'online' && gameShown) toast('الاتصال ضعيف…'); });
+      finish(rm);
+    };
+    setTimeout(function () { finish(null); }, 12000);
+    if (window.claude && window.claude.use) {
+      window.claude.use('room').then(function (rm) { if (rm) hook(rm); else finish(null); }).catch(function () { finish(null); });
+    } else if (FB_OK) {
+      try { hook(makeFirebaseRoom(FIREBASE_URL)); } catch (e) { roomProblem = 'تعذّر الاتصال بقاعدة Firebase. تأكد من الرابط ومن قواعد القراءة والكتابة.'; finish(null); }
+    } else {
+      roomProblem = 'لم يُضبط رابط Firebase بعد.';
+      finish(null);
+    }
+  });
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+}
+</script>
+</body>
+</html>
