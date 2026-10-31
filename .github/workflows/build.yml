@@ -30,7 +30,7 @@ jobs:
           java-version: 21
 
       - run: npm install --legacy-peer-deps
-      
+      - run: npx cap add android
 
       - name: Native config (Firebase file, AdMob id, version)
         env:
