@@ -37,6 +37,7 @@ jobs:
           [ -z "$KS_B64" ] && missing="$missing KEYSTORE_BASE64"
           [ -z "$KS_PASS" ] && missing="$missing KEYSTORE_PASSWORD"
           [ -z "$KS_ALIAS" ] && missing="$missing KEY_ALIAS"
+
           if [ -n "$missing" ]; then
             echo "::error::Missing GitHub secrets:$missing"
             exit 1
@@ -73,6 +74,7 @@ jobs:
 
           text = root.read_text()
           dependency = "classpath 'com.google.gms:google-services:4.4.2'"
+
           if dependency not in text:
               match = re.search(r'(?m)^(\s*)dependencies\s*\{', text)
               if not match:
@@ -82,17 +84,29 @@ jobs:
               root.write_text(text)
 
           app_text = app.read_text()
+
           if "com.google.gms.google-services" not in app_text:
-              app.write_text(app_text.rstrip() + "\n\napply plugin: 'com.google.gms.google-services'\n")
+              app.write_text(
+                  app_text.rstrip()
+                  + "\n\napply plugin: 'com.google.gms.google-services'\n"
+              )
 
           v = variables.read_text()
+
           additions = [
               "rgcfaIncludeGoogle = true",
               "androidxCredentialsVersion = '1.3.0'"
           ]
+
           for item in additions:
               if item.split(" = ")[0] not in v:
-                  v = re.sub(r'(?m)^ext\s*\{', 'ext {\n    ' + item, v, count=1)
+                  v = re.sub(
+                      r'(?m)^ext\s*\{',
+                      'ext {\n    ' + item,
+                      v,
+                      count=1
+                  )
+
           variables.write_text(v)
 
           print("Firebase Gradle configuration completed")
@@ -108,41 +122,68 @@ jobs:
           import os
           import xml.etree.ElementTree as ET
 
+          ET.register_namespace(
+              "android",
+              "http://schemas.android.com/apk/res/android"
+          )
+
           manifest = Path("android/app/src/main/AndroidManifest.xml")
           tree = ET.parse(manifest)
           root = tree.getroot()
+
           ns = "{http://schemas.android.com/apk/res/android}"
 
           app = root.find("application")
+
           if app is None:
               raise SystemExit("Android application element missing")
 
-          app_id = os.environ.get("ADMOB_APP_ID") or "ca-app-pub-3940256099942544~3347511713"
+          app_id = (
+              os.environ.get("ADMOB_APP_ID")
+              or "ca-app-pub-3940256099942544~3347511713"
+          )
 
           item = next(
-              (x for x in app.findall("meta-data")
-               if x.get(ns + "name") == "com.google.android.gms.ads.APPLICATION_ID"),
+              (
+                  x for x in app.findall("meta-data")
+                  if x.get(ns + "name")
+                  == "com.google.android.gms.ads.APPLICATION_ID"
+              ),
               None
           )
 
           if item is None:
               item = ET.SubElement(app, "meta-data")
-          item.set(ns + "name", "com.google.android.gms.ads.APPLICATION_ID")
+
+          item.set(
+              ns + "name",
+              "com.google.android.gms.ads.APPLICATION_ID"
+          )
+
           item.set(ns + "value", app_id)
 
-          tree.write(manifest, encoding="utf-8", xml_declaration=True)
+          tree.write(
+              manifest,
+              encoding="utf-8",
+              xml_declaration=True
+          )
 
           gradle = Path("android/app/build.gradle")
           text = gradle.read_text()
+
           text, count = re.subn(
               r'versionCode\s+\d+',
               'versionCode ' + os.environ.get("GITHUB_RUN_NUMBER", "1"),
               text,
               count=1
           )
+
           if count == 0:
               raise SystemExit("versionCode not found in app/build.gradle")
+
           gradle.write_text(text)
+
+          print("Manifest and AdMob configuration completed")
           PY
 
       - name: Sync Capacitor
@@ -179,6 +220,7 @@ jobs:
             "$KS_ALIAS"
 
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+
           UNSIGNED=$(find android/app/build/outputs/apk/release -name "*.apk" | head -1)
 
           test -n "$UNSIGNED"
@@ -214,7 +256,10 @@ jobs:
           KS_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           echo "$KS_B64" | base64 -d > k.jks
+
           keytool -list -v -keystore k.jks \
             -storepass "$KS_PASS" \
             -alias "$KS_ALIAS" | grep -E "SHA1|SHA256"
-          rm -f k.jk
+
+          rm -f k.jks
+          
