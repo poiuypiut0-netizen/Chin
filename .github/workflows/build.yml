@@ -50,9 +50,9 @@ jobs:
       - run: npx cap sync android
       - run: grep -E "targetSdk|compileSdk|minSdk" android/variables.gradle
 
-      - run: chmod +x android/gradlew && cd android && ./gradlew bundleRelease
+      - run: chmod +x android/gradlew && cd android && ./gradlew bundleRelease assembleRelease
 
-      - name: Sign bundle
+      - name: Sign bundle and APK
         env:
           KS_B64: ${{ secrets.KEYSTORE_BASE64 }}
           KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -60,9 +60,19 @@ jobs:
         run: |
           echo "$KS_B64" | base64 -d > upload.jks
           jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore upload.jks -storepass "$KS_PASS" android/app/build/outputs/bundle/release/app-release.aab "$KS_ALIAS"
-          rm upload.jks
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          UNSIGNED=$(ls android/app/build/outputs/apk/release/*.apk | head -1)
+          "$BT/zipalign" -p -f 4 "$UNSIGNED" aligned.apk
+          "$BT/apksigner" sign --ks upload.jks --ks-pass pass:"$KS_PASS" --ks-key-alias "$KS_ALIAS" --out app-release.apk aligned.apk
+          "$BT/apksigner" verify app-release.apk
+          rm -f upload.jks aligned.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: tafaaul-aab
           path: android/app/build/outputs/bundle/release/app-release.aab
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tafaaul-apk
+          path: app-release.apk
