@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "552179612957",
+    "firebase_url": "https://gini-4debc-default-rtdb.firebaseio.com",
+    "project_id": "gini-4debc",
+    "storage_bucket": "gini-4debc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:552179612957:android:7a1ba0abf55fa4259bb5f4",
+        "android_client_info": {
+          "package_name": "com.tafaaul.chain"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "552179612957-8dppp8gog2e925j7faedmulmcav6ltib.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLTDBt9A24VIeaS4rwv-mBsSp_7uvOeag"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "552179612957-8dppp8gog2e925j7faedmulmcav6ltib.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
