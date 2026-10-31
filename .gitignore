@@ -1,2 +1,4 @@
 node_modules
 android
+*.jks
+ks.b64

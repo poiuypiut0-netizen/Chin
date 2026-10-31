@@ -213,14 +213,13 @@
     z-index: 10;
     background: var(--sky-b);
     background-image: radial-gradient(120% 80% at 50% 30%, var(--sky-a), var(--sky-b));
-    display: grid;
-    place-items: center;
+    display: flex;
     padding-block: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-bottom, 0px));
     padding-left: max(16px, env(safe-area-inset-left, 0px));
     padding-right: max(16px, env(safe-area-inset-right, 0px));
     overflow-y: auto;
   }
-  .panel { width: min(100%, 380px); display: grid; gap: 14px; justify-items: stretch; text-align: center; }
+  .panel { width: min(100%, 380px); margin: auto; display: grid; gap: 14px; justify-items: stretch; text-align: center; }
   .logo { display: flex; justify-content: center; gap: 10px; margin: 0 auto 4px; }
   .logo i { width: 54px; height: 54px; border-radius: 50%; display: block; position: relative; box-shadow: inset 0 -5px 0 rgba(0, 0, 0, .15); }
   .logo i.r { background: var(--red); }
@@ -307,6 +306,41 @@
   .stage.msg .boardwrap { width: min(100%, 440px, 42vh); margin-top: -60px; }
   @media (max-height: 640px) { h1 { font-size: 36px; } .logo i { width: 44px; height: 44px; } .logo i::before, .logo i::after { top: 17.5px; } .logo i::before { left: 11px; } .logo i::after { right: 11px; } .logo i.one::before { left: 17.5px; } }
   @media (prefers-reduced-motion: reduce) { .pill.active, .card, .toast, .dots i { animation: none; } }
+  /* v2: متجر، عجلة، تصنيف */
+  .toast { position: fixed; z-index: 40; top: max(70px, calc(env(safe-area-inset-top, 0px) + 20px)); }
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .chip.pts { background: var(--ink); color: #ffd54a; box-shadow: 0 3px 0 #000; }
+  .sheet { background: var(--ink); border: 6px solid #000; border-radius: 26px; padding: 12px; color: #fff; display: grid; gap: 10px; text-align: center; }
+  .sheet h2 { margin: 0; font-size: 28px; line-height: 1.2; font-weight: 800; }
+  .sheet .sub { color: #d6e2ec; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .tab { border: 0; border-radius: 999px; padding: 6px 12px; background: #46505e; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; }
+  .tab.on { background: #fff; color: var(--ink); }
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-height: 44vh; overflow-y: auto; padding: 2px; }
+  .item { border: 0; border-radius: 16px; background: var(--tile); color: var(--ink); padding: 8px 4px; display: grid; justify-items: center; gap: 2px; cursor: pointer; font-weight: 700; }
+  .item canvas { position: static; width: 56px; height: 56px; }
+  .item .nm { font-size: 13px; line-height: 1.2; }
+  .item .st { font-size: 12px; color: #5b6675; }
+  .item.lock canvas { opacity: .55; }
+  .item.eq { outline: 3px solid var(--blue); }
+  .pack { background: #46505e; border-radius: 16px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: start; }
+  .pack b { display: block; font-size: 16px; }
+  .pack small { color: #c3cfda; font-size: 12.5px; }
+  .pack .big { width: auto; font-size: 15px; padding: 8px 14px; }
+  .pack .own { color: #7dffa8; font-weight: 800; }
+  .wheelbox { position: relative; width: min(72vw, 290px); aspect-ratio: 1; margin: 8px auto 0; }
+  .wheelbox canvas { position: static; width: 100%; height: 100%; border-radius: 50%; border: 6px solid #000; transition: transform 4s cubic-bezier(.12, .7, .1, 1); display: block; }
+  .ptr { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 13px solid transparent; border-right: 13px solid transparent; border-top: 24px solid #ffd54a; z-index: 2; filter: drop-shadow(0 2px 0 #000); }
+  .big:disabled { opacity: .5; cursor: default; }
+  .blist { display: grid; gap: 6px; max-height: 50vh; overflow-y: auto; }
+  .brow { display: flex; align-items: center; gap: 10px; padding: 6px 12px; background: rgba(255, 255, 255, .09); border-radius: 12px; text-align: start; }
+  .brow.me { background: rgba(0, 191, 240, .3); }
+  .brow .rk { min-width: 1.6em; color: #ffd54a; font-size: 18px; }
+  .brow .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+  .brow .wn { font-size: 14px; color: #b8c6d3; }
+  .adov { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, .88); color: #fff; display: grid; place-items: center; text-align: center; font-size: 20px; }
+  .adov h2 { margin: 0 0 6px; font-size: 32px; }
+  .rw { color: #ffd54a; font-size: 24px; font-weight: 800; }
 </style>
 
 </head>
@@ -343,12 +377,16 @@
 
 <section class="menu" id="menu" dir="rtl">
   <div class="panel" id="vHome">
+    <div class="topbar"><button class="chip" id="bLogin" type="button">تسجيل الدخول</button><span class="chip pts">★ <b class="ptsv">0</b></span></div>
     <div class="logo" aria-hidden="true"><i class="r"></i><i class="b one"></i><i class="r one"></i></div>
     <h1>تفاعل متسلسل</h1>
     <p class="sub">أضف نقاطك، والخانة اللي تمتلئ تنفجر وتحوّل خانات جيرانها إلى لونك. فز لما تخلّي الخصم بلا ولا خانة.</p>
     <button class="big main" id="bOnline" type="button">العب أونلاين</button>
     <button class="big" id="bAi" type="button">ضد الجهاز</button>
     <button class="big" id="bLocal" type="button">لاعبان على نفس الجوال</button>
+    <button class="big" id="bShop" type="button">🛍️ المتجر</button>
+    <button class="big" id="bWheel" type="button">🎡 عجلة الحظ</button>
+    <button class="big" id="bBoard" type="button">🏆 التصنيف</button>
     <p class="sub" style="font-size:13.5px">الانفجار: الزوايا عند ٢ نقطة، الأطراف عند ٣، والوسط عند ٤.</p>
   </div>
 
@@ -373,9 +411,59 @@
     <button class="big main" id="bCopy" type="button">انسخ الكود</button>
     <button class="link" id="bLeave" type="button">إلغاء</button>
   </div>
+
+  <div class="panel" id="vShop" hidden>
+    <div class="sheet">
+      <div class="topbar"><h2>المتجر</h2><span class="chip pts">★ <b class="ptsv">0</b></span></div>
+      <div class="tabs" id="shopTabs">
+        <button class="tab on" data-t="skin" type="button">الأشكال</button>
+        <button class="tab" data-t="arab" type="button">أعلام عربية</button>
+        <button class="tab" data-t="islamic" type="button">أعلام إسلامية</button>
+        <button class="tab" data-t="world" type="button">أعلام العالم</button>
+      </div>
+      <div id="packBox"></div>
+      <div class="grid" id="shopGrid"></div>
+      <button class="chip" id="bRestore" type="button" style="justify-self:center">استعادة مشترياتي</button>
+    </div>
+    <button class="link" data-back type="button">رجوع</button>
+  </div>
+
+  <div class="panel" id="vWheel" hidden>
+    <div class="sheet">
+      <div class="topbar"><h2>عجلة الحظ</h2><span class="chip pts">★ <b class="ptsv">0</b></span></div>
+      <div class="wheelbox"><i class="ptr"></i><canvas id="wheelCv" width="300" height="300"></canvas></div>
+      <p class="sub" id="spinInfo"></p>
+      <button class="big blue" id="bSpin" type="button">شاهد إعلان وأدر العجلة</button>
+    </div>
+    <button class="link" data-back type="button">رجوع</button>
+  </div>
+
+  <div class="panel" id="vBoard" hidden>
+    <div class="sheet">
+      <h2>التصنيف</h2>
+      <p class="sub" id="boardMsg"></p>
+      <button class="big blue" id="bBoardLogin" type="button">تسجيل الدخول</button>
+      <div class="blist" id="boardList"></div>
+    </div>
+    <button class="link" data-back type="button">رجوع</button>
+  </div>
+
+  <div class="panel" id="vAcct" hidden>
+    <div class="sheet">
+      <h2 id="acName"></h2>
+      <p class="sub" id="acInfo"></p>
+      <button class="big" id="bLogout" type="button">تسجيل الخروج</button>
+      <button class="big red" id="bDelAcct" type="button">حذف حسابي وبياناتي</button>
+    </div>
+    <button class="link" data-back type="button">رجوع</button>
+  </div>
+
+  <div class="adov" id="adOv" hidden><div><h2>إعلان تجريبي</h2><p>ينتهي بعد <b id="adSec">3</b> ثواني</p></div></div>
 </section>
 
+<script src="config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
 (function () {
@@ -501,22 +589,75 @@
     4: [[-0.5, -0.46], [0.5, -0.46], [-0.5, 0.46], [0.5, 0.46]]
   };
 
-  function disc(x, y, R, pal, n, sq) {
-    ctx.fillStyle = 'rgba(20,50,70,.20)';
-    ctx.beginPath(); ctx.ellipse(x, y + R * 0.2, R * 0.98, R * 0.9, 0, 0, 6.2832); ctx.fill();
-    ctx.fillStyle = pal.d;
-    ctx.beginPath(); ctx.arc(x, y + R * 0.08, R, 0, 6.2832); ctx.fill();
-    var gr = ctx.createRadialGradient(x - R * 0.35, y - R * 0.4, R * 0.1, x, y, R);
+  var COS = { 1: { skin: 'circle', flag: '' }, 2: { skin: 'circle', flag: '' } };
+  var flagCache = {};
+  function flagEmoji(cc) { return String.fromCodePoint(0x1F1E6 + cc.charCodeAt(0) - 65, 0x1F1E6 + cc.charCodeAt(1) - 65); }
+  function flagImg(cc) {
+    if (flagCache[cc]) return flagCache[cc];
+    var k = document.createElement('canvas'); k.width = k.height = 128;
+    var q = k.getContext('2d');
+    q.font = '96px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif';
+    q.textAlign = 'center'; q.textBaseline = 'middle';
+    q.fillText(flagEmoji(cc), 64, 70);
+    flagCache[cc] = k;
+    return k;
+  }
+  function shapePath(c, x, y, R, s) {
+    c.beginPath();
+    var i, a;
+    if (s === 'square') {
+      var h = R * 0.9, r = R * 0.28;
+      c.moveTo(x - h + r, y - h);
+      c.arcTo(x + h, y - h, x + h, y + h, r);
+      c.arcTo(x + h, y + h, x - h, y + h, r);
+      c.arcTo(x - h, y + h, x - h, y - h, r);
+      c.arcTo(x - h, y - h, x + h, y - h, r);
+    } else if (s === 'hex') {
+      for (i = 0; i < 6; i++) { a = -1.5708 + i * 1.0472; c[i ? 'lineTo' : 'moveTo'](x + Math.cos(a) * R * 1.04, y + Math.sin(a) * R * 1.04); }
+    } else if (s === 'diamond') {
+      c.moveTo(x, y - R * 1.15); c.lineTo(x + R * 1.1, y); c.lineTo(x, y + R * 1.15); c.lineTo(x - R * 1.1, y);
+    } else if (s === 'star') {
+      for (i = 0; i < 10; i++) { a = -1.5708 + i * 0.62832; var q2 = (i % 2 ? 0.68 : 1.2) * R; c[i ? 'lineTo' : 'moveTo'](x + Math.cos(a) * q2, y + Math.sin(a) * q2); }
+    } else if (s === 'heart') {
+      c.moveTo(x, y + R * 0.98);
+      c.bezierCurveTo(x - R * 1.3, y + R * 0.2, x - R * 1.05, y - R * 0.95, x, y - R * 0.35);
+      c.bezierCurveTo(x + R * 1.05, y - R * 0.95, x + R * 1.3, y + R * 0.2, x, y + R * 0.98);
+    } else {
+      c.arc(x, y, R, 0, 6.2832);
+    }
+    c.closePath();
+  }
+
+  function disc(c, x, y, R, pal, n, sq, cos) {
+    var shape = (cos && cos.skin) || 'circle', fl = cos && cos.flag;
+    c.fillStyle = 'rgba(20,50,70,.20)';
+    if (shape === 'circle') { c.beginPath(); c.ellipse(x, y + R * 0.2, R * 0.98, R * 0.9, 0, 0, 6.2832); }
+    else shapePath(c, x, y + R * 0.2, R * 0.96, shape);
+    c.fill();
+    c.fillStyle = pal.d;
+    shapePath(c, x, y + R * 0.08, R, shape); c.fill();
+    var gr = c.createRadialGradient(x - R * 0.35, y - R * 0.4, R * 0.1, x, y, R);
     gr.addColorStop(0, pal.l); gr.addColorStop(0.55, pal.m); gr.addColorStop(1, pal.m);
-    ctx.fillStyle = gr;
-    ctx.beginPath(); ctx.arc(x, y, R, 0, 6.2832); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,.35)';
-    ctx.beginPath(); ctx.ellipse(x - R * 0.36, y - R * 0.5, R * 0.3, R * 0.15, -0.6, 0, 6.2832); ctx.fill();
+    c.fillStyle = gr;
+    shapePath(c, x, y, R, shape); c.fill();
+    if (fl) {
+      var img = flagImg(fl), q = R * 0.74;
+      c.save(); shapePath(c, x, y, q, shape); c.clip();
+      c.drawImage(img, x - q, y - q, q * 2, q * 2);
+      c.restore();
+      c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = Math.max(1, R * 0.07);
+      shapePath(c, x, y, q, shape); c.stroke();
+    } else {
+      c.fillStyle = 'rgba(255,255,255,.35)';
+      c.beginPath(); c.ellipse(x - R * 0.36, y - R * 0.5, R * 0.3, R * 0.15, -0.6, 0, 6.2832); c.fill();
+    }
     if (n > 0) {
       var pat = DOT[Math.min(n, 4)], dr = R * 0.17 * sq, sp = R * 0.34;
-      ctx.fillStyle = '#fff';
       for (var k = 0; k < pat.length; k++) {
-        ctx.beginPath(); ctx.arc(x + pat[k][0] * sp, y + pat[k][1] * sp, dr, 0, 6.2832); ctx.fill();
+        var dx = x + pat[k][0] * sp, dy = y + pat[k][1] * sp;
+        if (fl) { c.fillStyle = 'rgba(0,0,0,.65)'; c.beginPath(); c.arc(dx, dy, dr * 1.35, 0, 6.2832); c.fill(); }
+        c.fillStyle = '#fff';
+        c.beginPath(); c.arc(dx, dy, dr, 0, 6.2832); c.fill();
       }
     }
   }
@@ -561,7 +702,7 @@
       var pul = crit ? 1 + 0.045 * Math.sin(t * 11 + i) : 1;
       R = cs * 0.355 * dScale[i] * (1 + kick[i] * 0.2) * pul;
       var sx = crit ? Math.sin(t * 38 + i * 3) * cs * 0.012 : 0;
-      disc(cx(i) + sx, cy(i), R, PAL[colOwn[i]], n, Math.min(1, dScale[i] * 1.3));
+      disc(ctx, cx(i) + sx, cy(i), R, PAL[colOwn[i]], n, Math.min(1, dScale[i] * 1.3), COS[colOwn[i]]);
     }
     for (var f = 0; f < flyers.length; f++) {
       var fl = flyers[f], u = (nowMs - fl.t0) / fl.dur;
@@ -816,6 +957,7 @@
       else { tb = cur === mine ? 'دورك' : ''; tt = cur === opp ? 'دور خصمك' : ''; }
     }
     $('tagBot').textContent = tb; $('tagTop').textContent = tt;
+    refreshCos();
     refreshMsg();
   }
 
@@ -825,9 +967,11 @@
     if (mode === 'local') text = w === 1 ? 'فاز الأحمر!' : 'فاز الأزرق!';
     else if (mode === 'ai') text = mineWon ? 'فزت!' : 'فاز الجهاز';
     else text = mineWon ? 'فزت!' : 'فاز خصمك';
+    var pts = reward(mineWon);
     var h = '<div class="card" dir="rtl">';
     if (mode === 'local') h += '<h2 class="flip p' + w + '">' + text + '</h2>';
     h += '<h2 class="p' + w + '">' + text + '</h2>';
+    if (pts) h += '<div class="rw">+' + pts + ' ★</div>';
     h += '<button class="big" id="again" type="button">جولة جديدة</button></div>';
     $('result').innerHTML = h;
     $('result').hidden = false;
@@ -867,8 +1011,13 @@
 
   /* ---------- menu ---------- */
   function view(v) {
-    ['Home', 'Online', 'Lobby'].forEach(function (n) { $('v' + n).hidden = (n !== v); });
+    ['Home', 'Online', 'Lobby', 'Shop', 'Wheel', 'Board', 'Acct'].forEach(function (n) { $('v' + n).hidden = (n !== v); });
     $('menu').hidden = false;
+    paintTop();
+    if (v === 'Shop') renderShop();
+    if (v === 'Wheel') paintWheel();
+    if (v === 'Board') loadBoard();
+    if (v === 'Acct') paintAcct();
   }
   function startLocal(m) {
     leaveRoom();
@@ -934,7 +1083,7 @@
   /* ---------- online ---------- */
   function publish() {
     if (!room || !code) return;
-    room.presence({ code: code, seat: seat, g: g, log: log }).catch(function () {});
+    room.presence({ code: code, seat: seat, g: g, log: log, skin: P.skin, flag: P.flag || '' }).catch(function () {});
   }
   var hostWaiting = false, matchTimer = 0;
   function cancelWaiting() {
@@ -1026,6 +1175,7 @@
       publish();
     }
 
+    for (i = 0; i < ps.length; i++) if (ps[i].seat === 3 - seat) oppCos(ps[i]);
     // adopt the newest round / the longest consistent move list
     for (i = 0; i < ps.length; i++) {
       var s = ps[i];
@@ -1058,7 +1208,7 @@
   var FB_OK = (typeof firebase !== 'undefined') && /^https:\/\/[^ ]+$/.test(FIREBASE_URL) && FIREBASE_URL.indexOf('YOUR-PROJECT') < 0;
 
   function makeFirebaseRoom(url) {
-    var app = firebase.initializeApp({ databaseURL: url });
+    var app = firebase.apps.length ? firebase.app() : firebase.initializeApp({ databaseURL: url });
     var db = firebase.database(app);
     var myId = Math.random().toString(36).slice(2, 10);
     var my = {}, code = null, ref = null, snap = [], peersH = [], errH = [], connH = [], isConn = false;
@@ -1116,11 +1266,440 @@
     };
   }
 
+  /* ================= v2: متجر، عجلة، تصنيف، تسجيل دخول ================= */
+  var CFG = window.APP_CONFIG || {};
+  var FBC = CFG.firebase || {};
+  var ADM = CFG.admob || {};
+  var PROD = CFG.products || { arab: 'pack_arab', islamic: 'pack_islamic' };
+  var WHEEL_MAX = CFG.wheelPerDay || 5;
+  function isNative() { try { return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); } catch (e) { return false; } }
+  function plug(n) { try { return (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins[n]) || null; } catch (e) { return null; } }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  /* ---------- الكتالوج ---------- */
+  var SKINS = [
+    { id: 'circle', n: 'دائرة', p: 0 },
+    { id: 'square', n: 'مربع', p: 150 },
+    { id: 'hex', n: 'سداسي', p: 250 },
+    { id: 'diamond', n: 'معيّن', p: 350 },
+    { id: 'star', n: 'نجمة', p: 500 },
+    { id: 'heart', n: 'قلب', p: 600 }
+  ];
+  var FLAGS = [];
+  function addFlags(g, str, price) {
+    str.split(',').forEach(function (s) { var p = s.split(':'); FLAGS.push({ id: 'f_' + p[0], cc: p[0], n: p[1], g: g, p: price || 0 }); });
+  }
+  addFlags('arab', 'SA:السعودية,AE:الإمارات,IQ:العراق,EG:مصر,JO:الأردن,LB:لبنان,SY:سوريا,PS:فلسطين,KW:الكويت,QA:قطر,BH:البحرين,OM:عُمان,YE:اليمن,LY:ليبيا,TN:تونس,DZ:الجزائر,MA:المغرب,SD:السودان,SO:الصومال,MR:موريتانيا,DJ:جيبوتي,KM:جزر القمر');
+  addFlags('islamic', 'TR:تركيا,IR:إيران,PK:باكستان,AF:أفغانستان,BD:بنغلاديش,ID:إندونيسيا,MY:ماليزيا,BN:بروناي,MV:المالديف,AZ:أذربيجان,KZ:كازاخستان,UZ:أوزبكستان,TM:تركمانستان,KG:قيرغيزستان,TJ:طاجيكستان,AL:ألبانيا,XK:كوسوفو,BA:البوسنة,NE:النيجر,ML:مالي,SN:السنغال,GM:غامبيا,GN:غينيا,SL:سيراليون,TD:تشاد,BF:بوركينا فاسو');
+  addFlags('world', 'US:أمريكا,GB:بريطانيا,FR:فرنسا,DE:ألمانيا,ES:إسبانيا,IT:إيطاليا,PT:البرتغال,NL:هولندا,SE:السويد,CH:سويسرا,BR:البرازيل,AR:الأرجنتين,MX:المكسيك,CA:كندا,AU:أستراليا,JP:اليابان,KR:كوريا الجنوبية,CN:الصين,IN:الهند,RU:روسيا,ZA:جنوب أفريقيا', 400);
+  var FLAG_BY_CC = {}; FLAGS.forEach(function (f) { FLAG_BY_CC[f.cc] = f; });
+  var SKIN_IDS = {}; SKINS.forEach(function (s) { SKIN_IDS[s.id] = s; });
+  function validSkin(s) { return SKIN_IDS[s] ? s : 'circle'; }
+  function validFlag(c) { return (typeof c === 'string' && FLAG_BY_CC[c]) ? c : ''; }
+
+  /* ---------- الملف الشخصي (محفوظ بالجهاز وبالسحابة إذا مسجّل دخول) ---------- */
+  var PKEY = 'cr-profile-v2';
+  function today() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function loadProfile() {
+    var d = { points: 0, owned: {}, skin: 'circle', flag: '', wins: 0, games: 0, spinDay: '', spins: 0, daily: '', upd: 0, linked: '' };
+    try {
+      var s = JSON.parse(localStorage.getItem(PKEY) || 'null');
+      if (s && typeof s === 'object') for (var k in d) if (s[k] !== undefined) d[k] = s[k];
+    } catch (e) {}
+    if (!d.owned || typeof d.owned !== 'object') d.owned = {};
+    return d;
+  }
+  var P = loadProfile();
+  var user = null, saveT = 0;
+  function skinOwned(id) { return id === 'circle' || !!P.owned['s_' + id]; }
+  function flagOwned(f) { return f.g === 'world' ? !!P.owned[f.id] : !!P.owned[PROD[f.g]]; }
+  function fixEquip() {
+    if (!SKIN_IDS[P.skin] || !skinOwned(P.skin)) P.skin = 'circle';
+    if (P.flag && (!FLAG_BY_CC[P.flag] || !flagOwned(FLAG_BY_CC[P.flag]))) P.flag = '';
+  }
+  fixEquip();
+  function saveP() {
+    P.upd = Date.now();
+    try { localStorage.setItem(PKEY, JSON.stringify(P)); } catch (e) {}
+    paintTop();
+    clearTimeout(saveT); saveT = setTimeout(pushCloud, 1500);
+  }
+  function uname() { return (user && user.displayName) ? user.displayName.split(' ')[0] : 'لاعب'; }
+
+  /* ---------- Firebase: حساب + سحابة ---------- */
+  function dbRef(p) { try { return firebase.database().ref(p); } catch (e) { return null; } }
+  function authOK() { return !!(window.firebase && firebase.auth && FBC.apiKey); }
+  function initFirebase() {
+    try {
+      if (typeof firebase === 'undefined' || firebase.apps.length) return;
+      firebase.initializeApp(Object.assign({ databaseURL: FIREBASE_URL }, FBC));
+    } catch (e) {}
+  }
+  function pushCloud() {
+    if (!user) return;
+    var r = dbRef('users/' + user.uid), b = dbRef('leaderboard/' + user.uid);
+    if (r) r.set(P).catch(function () {});
+    if (b) b.set({ name: uname(), wins: P.wins, games: P.games, upd: Date.now() }).catch(function () {});
+  }
+  function pullCloud() {
+    var u = user, r = u && dbRef('users/' + u.uid);
+    if (!r) return;
+    r.once('value').then(function (s) {
+      var v = s.val();
+      if (v) {
+        var owned = Object.assign({}, P.owned, v.owned || {});
+        if (P.linked !== u.uid) {
+          /* أول مرة يربط هذا الجهاز بالحساب: ندمج ونأخذ الأكبر */
+          P.points = Math.max(P.points, v.points || 0);
+          P.wins = Math.max(P.wins, v.wins || 0);
+          P.games = Math.max(P.games, v.games || 0);
+          if (v.skin) P.skin = v.skin;
+          if (v.flag !== undefined) P.flag = v.flag;
+        } else if ((v.upd || 0) > P.upd) {
+          ['points', 'skin', 'flag', 'wins', 'games', 'spinDay', 'spins', 'daily'].forEach(function (k) { if (v[k] !== undefined) P[k] = v[k]; });
+        }
+        P.owned = owned;
+      }
+      P.linked = u.uid;
+      fixEquip(); saveP(); renderShop();
+    }).catch(function () { toast('تعذّر مزامنة حسابك. تأكد من قواعد Firebase'); });
+  }
+  function initAuth() {
+    if (!authOK()) return;
+    try {
+      firebase.auth().onAuthStateChanged(function (u) {
+        user = u || null; paintTop();
+        if (user) pullCloud();
+        if (!$('vBoard').hidden) loadBoard();
+        if (!$('vAcct').hidden) paintAcct();
+      });
+    } catch (e) {}
+  }
+  function login() {
+    if (!authOK()) { toast('تسجيل الدخول غير مفعّل بعد: ضع إعدادات Firebase بملف config.js'); return; }
+    var fail = function (e) {
+      var m = (e && (e.code || e.message)) ? String(e.code || e.message) : '';
+      if (/cancel|popup-closed/i.test(m)) return;
+      toast('تعذّر تسجيل الدخول' + (m ? ' (' + m.slice(0, 40) + ')' : ''));
+    };
+    if (isNative()) {
+      var FA = plug('FirebaseAuthentication');
+      if (!FA) { toast('إضافة الدخول غير موجودة بهذا التطبيق'); return; }
+      FA.signInWithGoogle().then(function (r) {
+        var tok = r && r.credential && r.credential.idToken;
+        if (!tok) throw new Error('no-token');
+        return firebase.auth().signInWithCredential(firebase.auth.GoogleAuthProvider.credential(tok));
+      }).catch(fail);
+    } else {
+      firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(fail);
+    }
+  }
+  function logout() {
+    var FA = isNative() && plug('FirebaseAuthentication');
+    Promise.resolve(FA ? FA.signOut() : null).catch(function () {}).then(function () { return firebase.auth().signOut(); }).then(function () { view('Home'); toast('سجّلت خروج'); });
+  }
+  var delArmed = false, delT = 0;
+  function deleteAccount() {
+    if (!user) return;
+    var b = $('bDelAcct');
+    if (!delArmed) {
+      delArmed = true; b.textContent = 'اضغط مرة ثانية للحذف النهائي';
+      delT = setTimeout(function () { delArmed = false; b.textContent = 'حذف حسابي وبياناتي'; }, 3500);
+      return;
+    }
+    clearTimeout(delT); delArmed = false; b.textContent = 'حذف حسابي وبياناتي';
+    var u = user, a = dbRef('users/' + u.uid), c = dbRef('leaderboard/' + u.uid);
+    Promise.all([a && a.remove(), c && c.remove()]).then(function () { return u.delete(); }).then(function () {
+      P.linked = ''; saveP(); view('Home'); toast('انحذف حسابك وبياناتك');
+    }).catch(function (e) {
+      toast(e && e.code === 'auth/requires-recent-login' ? 'سجّل خروج وادخل من جديد، وبعدين احذف' : 'تعذّر حذف الحساب');
+    });
+  }
+
+  /* ---------- النقاط ---------- */
+  function reward(win) {
+    var pts = 0;
+    if (mode === 'ai') pts = win ? 15 : 3;
+    else if (mode === 'online') pts = win ? 30 : 5;
+    if (!pts) return 0;
+    P.points += pts; P.games++;
+    if (mode === 'online' && win) P.wins++;
+    saveP();
+    return pts;
+  }
+  function dailyBonus() {
+    var t = today();
+    if (P.daily === t) return;
+    P.daily = t; P.points += 20; saveP();
+    setTimeout(function () { toast('هدية اليوم: +20 نقطة'); }, 700);
+  }
+  function paintTop() {
+    var a = document.querySelectorAll('.ptsv');
+    for (var i = 0; i < a.length; i++) a[i].textContent = P.points;
+    var b = $('bLogin');
+    if (b) b.textContent = user ? ('👤 ' + uname()) : 'تسجيل الدخول';
+  }
+
+  /* ---------- الإعلانات (مكافأة) ---------- */
+  var Ads = (function () {
+    var inited = false;
+    function init() {
+      var A = plug('AdMob');
+      if (!A) return Promise.resolve(false);
+      if (inited) return Promise.resolve(true);
+      return A.initialize({ initializeForTesting: !!ADM.testing }).then(function () { inited = true; return true; }).catch(function () { return false; });
+    }
+    function sim() {
+      return new Promise(function (res) {
+        var o = $('adOv'), n = 3;
+        o.hidden = false; $('adSec').textContent = n;
+        var t = setInterval(function () {
+          n--; $('adSec').textContent = n;
+          if (n <= 0) { clearInterval(t); o.hidden = true; res(true); }
+        }, 1000);
+      });
+    }
+    function rewarded() {
+      var A = plug('AdMob');
+      if (!A) return (isNative() || CFG.simulateAds === false) ? Promise.resolve(false) : sim();
+      return init().then(function (ok) {
+        if (!ok) return false;
+        return new Promise(function (res) {
+          var got = false, hs = [], fin = false;
+          function done(v) { if (fin) return; fin = true; hs.forEach(function (h) { try { h.remove(); } catch (e) {} }); res(v); }
+          Promise.all([
+            A.addListener('onRewardedVideoAdReward', function () { got = true; }),
+            A.addListener('onRewardedVideoAdDismissed', function () { setTimeout(function () { done(got); }, 300); }),
+            A.addListener('onRewardedVideoAdFailedToLoad', function () { done(false); }),
+            A.addListener('onRewardedVideoAdFailedToShow', function () { done(false); })
+          ]).then(function (h) {
+            hs = h;
+            return A.prepareRewardVideoAd({ adId: ADM.rewardedId, isTesting: !!ADM.testing });
+          }).then(function () { return A.showRewardVideoAd(); }).catch(function () { done(false); });
+        });
+      });
+    }
+    return { rewarded: rewarded };
+  })();
+
+  /* ---------- الشراء الحقيقي (Google Play Billing عبر cordova-plugin-purchase) ---------- */
+  var Billing = (function () {
+    var st = null, ready = false;
+    function ids() { return [PROD.arab, PROD.islamic]; }
+    function sync() {
+      if (!st) return;
+      ids().forEach(function (id) {
+        try { if (st.owned(id) && !P.owned[id]) { P.owned[id] = true; saveP(); toast('تم تفعيل الحزمة'); } } catch (e) {}
+      });
+      renderShop();
+    }
+    function init() {
+      if (ready || !window.CdvPurchase) return;
+      try {
+        var C = window.CdvPurchase; st = C.store; ready = true;
+        st.register(ids().map(function (id) { return { id: id, type: C.ProductType.NON_CONSUMABLE, platform: C.Platform.GOOGLE_PLAY }; }));
+        st.when().approved(function (t) { t.finish(); });
+        st.when().finished(function () { sync(); });
+        st.when().productUpdated(function () { sync(); });
+        st.initialize([C.Platform.GOOGLE_PLAY]).then(function () { sync(); });
+      } catch (e) { ready = false; }
+    }
+    function price(id) {
+      try { var p = st && st.get(id, window.CdvPurchase.Platform.GOOGLE_PLAY); return (p && p.pricing && p.pricing.price) || ''; } catch (e) { return ''; }
+    }
+    function buy(id) {
+      if (!st) return Promise.reject(new Error('not-ready'));
+      var p = st.get(id, window.CdvPurchase.Platform.GOOGLE_PLAY), o = p && p.getOffer();
+      if (!o) return Promise.reject(new Error('no-offer'));
+      return o.order();
+    }
+    function restore() { if (!st) return Promise.reject(new Error('not-ready')); return st.restorePurchases().then(sync); }
+    return { init: init, price: price, buy: buy, restore: restore, ready: function () { return ready; } };
+  })();
+
+  /* ---------- المتجر ---------- */
+  var shopTab = 'skin';
+  var PACK_NAME = { arab: 'حزمة الأعلام العربية', islamic: 'حزمة الأعلام الإسلامية' };
+  function renderShop() {
+    if ($('vShop').hidden) return;
+    var tabs = document.querySelectorAll('#shopTabs .tab');
+    for (var t = 0; t < tabs.length; t++) tabs[t].classList.toggle('on', tabs[t].dataset.t === shopTab);
+
+    var pb = $('packBox'), html = '';
+    if (shopTab === 'arab' || shopTab === 'islamic') {
+      var own = !!P.owned[PROD[shopTab]], cnt = FLAGS.filter(function (f) { return f.g === shopTab; }).length;
+      var pr = Billing.price(PROD[shopTab]);
+      html = '<div class="pack"><div><b>' + PACK_NAME[shopTab] + '</b><small>' + cnt + ' علم، دفعة وحدة</small></div>' +
+        (own ? '<span class="own">✓ عندك</span>' : '<button class="big blue" id="packBuy" data-g="' + shopTab + '" type="button">' + (pr ? 'اشترِ ' + esc(pr) : 'اشترِ الحزمة') + '</button>') + '</div>';
+    }
+    pb.innerHTML = html;
+
+    var list = [], g = '';
+    if (shopTab === 'skin') list = SKINS.map(function (s) { return { k: 's', id: s.id, n: s.n, p: s.p, own: skinOwned(s.id), eq: P.skin === s.id, cos: { skin: s.id, flag: '' } }; });
+    else list = FLAGS.filter(function (f) { return f.g === shopTab; }).map(function (f) {
+      return { k: 'f', id: f.cc, n: f.n, p: f.p, g: f.g, own: flagOwned(f), eq: P.flag === f.cc, cos: { skin: 'circle', flag: f.cc } };
+    });
+    var h = '';
+    list.forEach(function (it, i) {
+      var st = it.eq ? '✓ مُجهّز' : (it.own ? 'جهّز' : (it.k === 'f' && it.g !== 'world' ? '🔒 حزمة' : '★ ' + it.p));
+      h += '<button class="item' + (it.own ? '' : ' lock') + (it.eq ? ' eq' : '') + '" data-k="' + it.k + '" data-id="' + it.id + '" type="button">' +
+        '<canvas width="72" height="72" data-i="' + i + '"></canvas><span class="nm">' + esc(it.n) + '</span><span class="st">' + st + '</span></button>';
+    });
+    $('shopGrid').innerHTML = h;
+    var cvs = $('shopGrid').querySelectorAll('canvas');
+    for (var i2 = 0; i2 < cvs.length; i2++) {
+      var c2 = cvs[i2].getContext('2d'), it2 = list[+cvs[i2].dataset.i];
+      disc(c2, 36, 36, 25, PAL[1], it2.k === 's' ? 2 : 0, 1, it2.cos);
+    }
+  }
+  function buyPack(g) {
+    if (!isNative() || !Billing.ready()) { toast('الشراء بالفلوس متوفر داخل التطبيق من متجر Play فقط'); return; }
+    Billing.buy(PROD[g]).then(function (err) { if (err && err.message) toast(err.message); }).catch(function () { toast('تعذّر فتح الدفع، حاول بعد شوي'); });
+  }
+  $('shopTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('.tab'); if (!b) return;
+    shopTab = b.dataset.t; renderShop();
+  });
+  $('packBox').addEventListener('click', function (e) {
+    var b = e.target.closest('#packBuy'); if (b) buyPack(b.dataset.g);
+  });
+  $('bRestore').addEventListener('click', function () {
+    if (!isNative() || !Billing.ready()) { toast('الاستعادة تشتغل داخل التطبيق فقط'); return; }
+    Billing.restore().then(function () { toast('تمت الاستعادة'); }).catch(function () { toast('تعذّرت الاستعادة'); });
+  });
+  $('shopGrid').addEventListener('click', function (e) {
+    var b = e.target.closest('.item'); if (!b) return;
+    var id = b.dataset.id;
+    if (b.dataset.k === 's') {
+      var s = SKIN_IDS[id];
+      if (skinOwned(id)) { P.skin = id; }
+      else if (P.points >= s.p) { P.points -= s.p; P.owned['s_' + id] = true; P.skin = id; toast('اشتريت شكل ' + s.n); sfx.win(); }
+      else { sfx.deny(); toast('نقاطك ما تكفي، باقي لك ' + (s.p - P.points)); return; }
+    } else {
+      var f = FLAG_BY_CC[id];
+      if (flagOwned(f)) { P.flag = (P.flag === id) ? '' : id; }
+      else if (f.g === 'world') {
+        if (P.points >= f.p) { P.points -= f.p; P.owned[f.id] = true; P.flag = id; toast('اشتريت علم ' + f.n); sfx.win(); }
+        else { sfx.deny(); toast('نقاطك ما تكفي، باقي لك ' + (f.p - P.points)); return; }
+      } else { buyPack(f.g); return; }
+    }
+    saveP(); renderShop();
+  });
+
+  /* ---------- عجلة الحظ ---------- */
+  var WV = [10, 50, 15, 100, 20, 25, 30, 200], WW = [30, 5, 25, 2.5, 20, 10, 7, 0.5];
+  var rot = 0, spinning = false;
+  function drawWheel() {
+    var c = $('wheelCv'), gx = c.getContext('2d'), S = c.width, R = S / 2, cols = ['#ff5f52', '#00bff0', '#ebeedc', '#ffd54a'];
+    gx.clearRect(0, 0, S, S);
+    for (var i = 0; i < 8; i++) {
+      var a0 = -Math.PI / 2 + i * Math.PI / 4;
+      gx.beginPath(); gx.moveTo(R, R); gx.arc(R, R, R, a0, a0 + Math.PI / 4); gx.closePath();
+      gx.fillStyle = cols[i % 4]; gx.fill();
+      gx.strokeStyle = 'rgba(0,0,0,.35)'; gx.lineWidth = 2; gx.stroke();
+      gx.save(); gx.translate(R, R); gx.rotate(a0 + Math.PI / 8);
+      gx.fillStyle = (i % 4 === 2 || i % 4 === 3) ? '#2a303a' : '#fff';
+      gx.font = '800 30px "Baloo Bhaijaan 2", sans-serif'; gx.textAlign = 'center'; gx.textBaseline = 'middle';
+      gx.fillText(String(WV[i]), R * 0.66, 0);
+      gx.restore();
+    }
+    gx.beginPath(); gx.arc(R, R, 22, 0, 6.2832); gx.fillStyle = '#2a303a'; gx.fill();
+  }
+  function spinsLeft() {
+    var t = today();
+    if (P.spinDay !== t) { P.spinDay = t; P.spins = 0; }
+    return Math.max(0, WHEEL_MAX - P.spins);
+  }
+  function paintWheel() {
+    var l = spinsLeft();
+    $('spinInfo').textContent = l > 0 ? ('باقي لك اليوم ' + l + ' من ' + WHEEL_MAX + ' محاولات. كل محاولة بإعلان قصير.') : 'خلصت محاولات اليوم. ارجع باجر!';
+    $('bSpin').disabled = spinning || l <= 0;
+  }
+  function pickPrize() {
+    var tot = 0, i; for (i = 0; i < WW.length; i++) tot += WW[i];
+    var r = Math.random() * tot;
+    for (i = 0; i < WW.length; i++) { r -= WW[i]; if (r <= 0) return i; }
+    return 0;
+  }
+  $('bSpin').addEventListener('click', function () {
+    if (spinning || spinsLeft() <= 0) return;
+    spinning = true; paintWheel();
+    Ads.rewarded().then(function (ok) {
+      if (!ok) { spinning = false; paintWheel(); toast(isNative() ? 'الإعلان مو جاهز الحين، جرّب بعد شوي' : 'ما كمل الإعلان'); return; }
+      P.spins++; saveP();
+      var i = pickPrize();
+      rot = rot - (rot % 360) + 360 * 5 + (360 - (i * 45 + 22.5));
+      $('wheelCv').style.transform = 'rotate(' + rot + 'deg)';
+      setTimeout(function () {
+        P.points += WV[i]; saveP();
+        spinning = false; paintWheel();
+        toast('ربحت ' + WV[i] + ' نقطة!'); sfx.win(); buzz(30);
+      }, reduce ? 200 : 4200);
+    }).catch(function () { spinning = false; paintWheel(); });
+  });
+
+  /* ---------- التصنيف ---------- */
+  function loadBoard() {
+    var list = $('boardList'), msg = $('boardMsg');
+    list.innerHTML = '';
+    $('bBoardLogin').hidden = !!user;
+    if (!user) msg.textContent = 'سجّل دخولك بحساب Google لتدخل التصنيف. يُحسب فقط فوزك أونلاين.';
+    var r = dbRef('leaderboard');
+    if (!r) { msg.textContent = 'التصنيف يحتاج اتصال بالإنترنت وإعداد Firebase.'; return; }
+    if (user) msg.textContent = 'جاري التحميل…';
+    r.orderByChild('wins').limitToLast(50).once('value').then(function (snap) {
+      var arr = [];
+      snap.forEach(function (ch) { var v = ch.val() || {}; arr.push({ id: ch.key, name: v.name || 'لاعب', wins: +v.wins || 0, games: +v.games || 0 }); });
+      arr.sort(function (a, b) { return b.wins - a.wins || a.games - b.games; });
+      var h = '';
+      arr.forEach(function (x, i) {
+        h += '<div class="brow' + (user && x.id === user.uid ? ' me' : '') + '"><b class="rk">' + (i + 1) + '</b><span class="nm">' + esc(x.name) + '</span><span class="wn">' + x.wins + ' فوز</span></div>';
+      });
+      if (user) msg.textContent = arr.length ? '' : 'لا أحد بالتصنيف بعد. كن الأول!';
+      list.innerHTML = h;
+    }).catch(function () { msg.textContent = 'تعذّر تحميل التصنيف. تأكد من قواعد Firebase والاتصال.'; });
+  }
+
+  /* ---------- حسابي ---------- */
+  function paintAcct() {
+    if (!user) { view('Home'); return; }
+    $('acName').textContent = user.displayName || 'حسابي';
+    $('acInfo').textContent = (user.email || '') + ' — فزت أونلاين ' + P.wins + ' مرة من ' + P.games + ' مباراة.';
+  }
+
+  /* ---------- تزيين اللاعبين (يظهر للطرفين أونلاين) ---------- */
+  var oppCosVal = { skin: 'circle', flag: '' };
+  function oppCos(s) { oppCosVal = { skin: validSkin(s.skin), flag: validFlag(s.flag) }; }
+  function refreshCos() {
+    var m = me();
+    COS[m] = { skin: validSkin(P.skin), flag: validFlag(P.flag) };
+    COS[3 - m] = (mode === 'online') ? oppCosVal : { skin: 'circle', flag: '' };
+  }
+
+  /* ---------- ربط الأزرار ---------- */
+  $('bShop').addEventListener('click', function () { view('Shop'); });
+  $('bWheel').addEventListener('click', function () { view('Wheel'); });
+  $('bBoard').addEventListener('click', function () { view('Board'); });
+  $('bLogin').addEventListener('click', function () { if (user) view('Acct'); else login(); });
+  $('bBoardLogin').addEventListener('click', login);
+  $('bLogout').addEventListener('click', logout);
+  $('bDelAcct').addEventListener('click', deleteAccount);
+  Array.prototype.forEach.call(document.querySelectorAll('[data-back]'), function (b) { b.addEventListener('click', function () { view('Home'); }); });
+
+  function initApp() {
+    initFirebase(); initAuth();
+    dailyBonus(); paintTop(); drawWheel();
+    Billing.init();
+    document.addEventListener('deviceready', Billing.init);
+    setTimeout(Billing.init, 1500); setTimeout(Billing.init, 4000);
+  }
+
   /* ---------- boot ---------- */
   fit();
   resetBoard();
   requestAnimationFrame(frame);
   view('Home');
+  initApp();
 
   var roomProblem = '';
   var roomReady = new Promise(function (resolve) {
