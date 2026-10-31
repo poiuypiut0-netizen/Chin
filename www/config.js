@@ -2,11 +2,11 @@
 window.APP_CONFIG = {
   /* من Firebase: Project settings ثم Your apps ثم Web app ثم Config */
   firebase: {
-    apiKey: '',
+    apiKey: 'AIzaSyBVAzTciQ03hy4Woabtyui_S9euyfdt9dU',
     authDomain: 'gini-4debc.firebaseapp.com',
     databaseURL: 'https://gini-4debc-default-rtdb.firebaseio.com',
     projectId: 'gini-4debc',
-    appId: ''
+    appId: '1:552179612957:web:1d098d4109e862659bb5f4'
   },
   /* AdMob: أثناء التجربة خلّيها true (إعلانات تجريبية). قبل النشر خلّيها false وحط رقم وحدتك */
   admob: {
