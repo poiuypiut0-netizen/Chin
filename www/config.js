@@ -11,7 +11,7 @@ window.APP_CONFIG = {
   /* AdMob: أثناء التجربة خلّيها true (إعلانات تجريبية). قبل النشر خلّيها false وحط رقم وحدتك */
   admob: {
     testing: true,
-    rewardedId: 'ca-app-pub-3940256099942544/5224354917'
+    rewardedId: 'ca-app-pub-5905573249091217/4965148455'
   },
   /* أرقام المنتجات اللي تنعمل بـ Play Console (نوع: منتج لمرة وحدة) */
   products: { arab: 'pack_arab', islamic: 'pack_islamic' },
