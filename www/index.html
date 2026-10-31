@@ -318,7 +318,7 @@
   .tab.on { background: #fff; color: var(--ink); }
   .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-height: 44vh; overflow-y: auto; padding: 2px; }
   .item { border: 0; border-radius: 16px; background: var(--tile); color: var(--ink); padding: 8px 4px; display: grid; justify-items: center; gap: 2px; cursor: pointer; font-weight: 700; }
-  .item canvas { position: static; width: 56px; height: 56px; }
+  .item canvas { position: static; width: 64px; height: 64px; }
   .item .nm { font-size: 13px; line-height: 1.2; }
   .item .st { font-size: 12px; color: #5b6675; }
   .item.lock canvas { opacity: .55; }
@@ -328,9 +328,6 @@
   .pack small { color: #c3cfda; font-size: 12.5px; }
   .pack .big { width: auto; font-size: 15px; padding: 8px 14px; }
   .pack .own { color: #7dffa8; font-weight: 800; }
-  .wheelbox { position: relative; width: min(72vw, 290px); aspect-ratio: 1; margin: 8px auto 0; }
-  .wheelbox canvas { position: static; width: 100%; height: 100%; border-radius: 50%; border: 6px solid #000; transition: transform 4s cubic-bezier(.12, .7, .1, 1); display: block; }
-  .ptr { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 13px solid transparent; border-right: 13px solid transparent; border-top: 24px solid #ffd54a; z-index: 2; filter: drop-shadow(0 2px 0 #000); }
   .big:disabled { opacity: .5; cursor: default; }
   .blist { display: grid; gap: 6px; max-height: 50vh; overflow-y: auto; }
   .brow { display: flex; align-items: center; gap: 10px; padding: 6px 12px; background: rgba(255, 255, 255, .09); border-radius: 12px; text-align: start; }
@@ -341,6 +338,38 @@
   .adov { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, .88); color: #fff; display: grid; place-items: center; text-align: center; font-size: 20px; }
   .adov h2 { margin: 0 0 6px; font-size: 32px; }
   .rw { color: #ffd54a; font-size: 24px; font-weight: 800; }
+  /* v2.1: شكل أحلى */
+  .prof { display: flex; align-items: center; gap: 10px; background: var(--ink); border: 5px solid #000; border-radius: 999px; padding: 5px 8px 5px 12px; color: #fff; text-align: start; }
+  .prof.on { cursor: pointer; }
+  .prof .av, .av.big { width: 46px; height: 46px; flex: none; border-radius: 50%; background: var(--red); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 22px; border: 3px solid #fff; }
+  .prof .who { flex: 1; min-width: 0; display: grid; }
+  .prof .who b { font-size: 17px; line-height: 1.2; }
+  .prof .who small { font-size: 12px; line-height: 1.35; color: #b8c6d3; }
+  .prof .chip.pts { background: #1b1f27; box-shadow: none; }
+  .av.big { width: 78px; height: 78px; font-size: 38px; justify-self: center; }
+  .gbtn { display: flex; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 999px; background: #fff; color: var(--ink); font-weight: 800; font-size: 17px; padding: 11px 16px; box-shadow: 0 4px 0 rgba(0, 0, 0, .2); cursor: pointer; }
+  .gbtn:active, .tile:active { transform: scale(.96); }
+  .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .tile { border: 0; border-radius: 22px; background: #fff; color: var(--ink); padding: 12px 4px 10px; display: grid; justify-items: center; gap: 4px; font-weight: 800; font-size: 14.5px; cursor: pointer; box-shadow: 0 4px 0 rgba(0, 0, 0, .18); transition: transform .08s; }
+  .tile svg { width: 48px; height: 48px; }
+  .hd { display: flex; align-items: center; gap: 10px; }
+  .hd svg { width: 46px; height: 46px; flex: none; }
+  .hd h2 { flex: 1; text-align: start; }
+  .item { box-shadow: 0 3px 0 rgba(0, 0, 0, .25); }
+  .item .st.pr { background: var(--ink); color: #ffd54a; border-radius: 999px; padding: 1px 10px; font-size: 12.5px; }
+  .item .st.ok { color: #1f7a4d; }
+  .item.eq .st.ok { color: #0a7ca0; }
+  .pack { background: linear-gradient(135deg, #4d5a6c, #343c4a); border: 2px solid rgba(255, 213, 74, .55); }
+  .brow .rk { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(255, 255, 255, .12); font-size: 16px; }
+  .brow .rk.r1 { background: #ffd54a; color: #2a303a; }
+  .brow .rk.r2 { background: #cfd8e3; color: #2a303a; }
+  .brow .rk.r3 { background: #d9915a; color: #2a303a; }
+  .wheelbox { position: relative; width: min(82vw, 330px); aspect-ratio: 1; margin: 22px auto 6px; }
+  .wheelbox canvas { position: absolute; display: block; }
+  #wheelRim { inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; filter: drop-shadow(0 6px 0 rgba(0, 0, 0, .35)); }
+  #wheelCv { left: 7.5%; top: 7.5%; width: 85%; height: 85%; border-radius: 50%; transition: transform 4s cubic-bezier(.12, .7, .1, 1); }
+  .hub { position: absolute; left: 50%; top: 50%; width: 17%; aspect-ratio: 1; transform: translate(-50%, -50%); z-index: 2; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff1a8, #f0b429 60%, #c98a00); border: 4px solid var(--ink); display: grid; place-items: center; color: var(--ink); font-size: 24px; box-shadow: 0 3px 0 rgba(0, 0, 0, .35); }
+  .ptr { position: absolute; left: 50%; top: -20px; width: 44px; height: 57px; transform: translateX(-50%); z-index: 3; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, .35)); }
 </style>
 
 </head>
@@ -377,16 +406,19 @@
 
 <section class="menu" id="menu" dir="rtl">
   <div class="panel" id="vHome">
-    <div class="topbar"><button class="chip" id="bLogin" type="button">تسجيل الدخول</button><span class="chip pts">★ <b class="ptsv">0</b></span></div>
+    <div class="prof" id="profBar"><div class="av" id="av">?</div><div class="who"><b id="whoName">ضيف</b><small id="whoSub">سجّل دخولك لتحفظ نقاطك وتدخل التصنيف</small></div><span class="chip pts">★ <b class="ptsv">0</b></span></div>
+    <button class="gbtn" id="bLogin" type="button"><svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>تسجيل الدخول بحساب Google</span></button>
     <div class="logo" aria-hidden="true"><i class="r"></i><i class="b one"></i><i class="r one"></i></div>
     <h1>تفاعل متسلسل</h1>
     <p class="sub">أضف نقاطك، والخانة اللي تمتلئ تنفجر وتحوّل خانات جيرانها إلى لونك. فز لما تخلّي الخصم بلا ولا خانة.</p>
     <button class="big main" id="bOnline" type="button">العب أونلاين</button>
     <button class="big" id="bAi" type="button">ضد الجهاز</button>
     <button class="big" id="bLocal" type="button">لاعبان على نفس الجوال</button>
-    <button class="big" id="bShop" type="button">🛍️ المتجر</button>
-    <button class="big" id="bWheel" type="button">🎡 عجلة الحظ</button>
-    <button class="big" id="bBoard" type="button">🏆 التصنيف</button>
+    <div class="tiles">
+      <button class="tile" id="bShop" type="button"><svg viewBox="0 0 48 48" aria-hidden="true" stroke="#2a303a" stroke-width="2" stroke-linejoin="round"><rect x="8" y="21" width="32" height="21" rx="3" fill="#ffd54a"/><path d="M8 8H16L14 20H4Z" fill="#ff5f52"/><path d="M16 8H24V20H14Z" fill="#fff"/><path d="M24 8H32L34 20H24Z" fill="#ff5f52"/><path d="M32 8H40L44 20H34Z" fill="#fff"/><rect x="19" y="28" width="10" height="14" rx="2" fill="#2a303a"/><rect x="11" y="26" width="6" height="8" rx="1" fill="#fff"/><rect x="31" y="26" width="6" height="8" rx="1" fill="#fff"/></svg><span>المتجر</span></button>
+      <button class="tile" id="bWheel" type="button"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#f0b429" stroke="#2a303a" stroke-width="2.5"/><path d="M24 24L24.0 7.0A17 17 0 0 1 36.0 12.0Z" fill="#ff5f52" stroke="#fff" stroke-width="1"/><path d="M24 24L36.0 12.0A17 17 0 0 1 41.0 24.0Z" fill="#00bff0" stroke="#fff" stroke-width="1"/><path d="M24 24L41.0 24.0A17 17 0 0 1 36.0 36.0Z" fill="#ffd54a" stroke="#fff" stroke-width="1"/><path d="M24 24L36.0 36.0A17 17 0 0 1 24.0 41.0Z" fill="#8e6bff" stroke="#fff" stroke-width="1"/><path d="M24 24L24.0 41.0A17 17 0 0 1 12.0 36.0Z" fill="#ff5f52" stroke="#fff" stroke-width="1"/><path d="M24 24L12.0 36.0A17 17 0 0 1 7.0 24.0Z" fill="#00bff0" stroke="#fff" stroke-width="1"/><path d="M24 24L7.0 24.0A17 17 0 0 1 12.0 12.0Z" fill="#ffd54a" stroke="#fff" stroke-width="1"/><path d="M24 24L12.0 12.0A17 17 0 0 1 24.0 7.0Z" fill="#8e6bff" stroke="#fff" stroke-width="1"/><circle cx="24" cy="24" r="5" fill="#2a303a"/><circle cx="24" cy="24" r="2" fill="#ffd54a"/></svg><span>عجلة الحظ</span></button>
+      <button class="tile" id="bBoard" type="button"><svg viewBox="0 0 48 48" aria-hidden="true" stroke="#2a303a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M14 8H34V19C34 26 30 31 24 31S14 26 14 19Z" fill="#ffd54a"/><path d="M14 12H8C8 19 11 22 15 22" fill="none"/><path d="M34 12H40C40 19 37 22 33 22" fill="none"/><rect x="21" y="31" width="6" height="6" fill="#f0b429"/><rect x="14" y="37" width="20" height="6" rx="2" fill="#ff5f52"/><path d="M20 13L24 22" stroke="#fff" stroke-width="2.5" fill="none"/></svg><span>التصنيف</span></button>
+    </div>
     <p class="sub" style="font-size:13.5px">الانفجار: الزوايا عند ٢ نقطة، الأطراف عند ٣، والوسط عند ٤.</p>
   </div>
 
@@ -414,7 +446,7 @@
 
   <div class="panel" id="vShop" hidden>
     <div class="sheet">
-      <div class="topbar"><h2>المتجر</h2><span class="chip pts">★ <b class="ptsv">0</b></span></div>
+      <div class="hd"><svg viewBox="0 0 48 48" aria-hidden="true" stroke="#2a303a" stroke-width="2" stroke-linejoin="round"><rect x="8" y="21" width="32" height="21" rx="3" fill="#ffd54a"/><path d="M8 8H16L14 20H4Z" fill="#ff5f52"/><path d="M16 8H24V20H14Z" fill="#fff"/><path d="M24 8H32L34 20H24Z" fill="#ff5f52"/><path d="M32 8H40L44 20H34Z" fill="#fff"/><rect x="19" y="28" width="10" height="14" rx="2" fill="#2a303a"/><rect x="11" y="26" width="6" height="8" rx="1" fill="#fff"/><rect x="31" y="26" width="6" height="8" rx="1" fill="#fff"/></svg><h2>المتجر</h2><span class="chip pts">★ <b class="ptsv">0</b></span></div>
       <div class="tabs" id="shopTabs">
         <button class="tab on" data-t="skin" type="button">الأشكال</button>
         <button class="tab" data-t="arab" type="button">أعلام عربية</button>
@@ -430,8 +462,13 @@
 
   <div class="panel" id="vWheel" hidden>
     <div class="sheet">
-      <div class="topbar"><h2>عجلة الحظ</h2><span class="chip pts">★ <b class="ptsv">0</b></span></div>
-      <div class="wheelbox"><i class="ptr"></i><canvas id="wheelCv" width="300" height="300"></canvas></div>
+      <div class="hd"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#f0b429" stroke="#2a303a" stroke-width="2.5"/><path d="M24 24L24.0 7.0A17 17 0 0 1 36.0 12.0Z" fill="#ff5f52" stroke="#fff" stroke-width="1"/><path d="M24 24L36.0 12.0A17 17 0 0 1 41.0 24.0Z" fill="#00bff0" stroke="#fff" stroke-width="1"/><path d="M24 24L41.0 24.0A17 17 0 0 1 36.0 36.0Z" fill="#ffd54a" stroke="#fff" stroke-width="1"/><path d="M24 24L36.0 36.0A17 17 0 0 1 24.0 41.0Z" fill="#8e6bff" stroke="#fff" stroke-width="1"/><path d="M24 24L24.0 41.0A17 17 0 0 1 12.0 36.0Z" fill="#ff5f52" stroke="#fff" stroke-width="1"/><path d="M24 24L12.0 36.0A17 17 0 0 1 7.0 24.0Z" fill="#00bff0" stroke="#fff" stroke-width="1"/><path d="M24 24L7.0 24.0A17 17 0 0 1 12.0 12.0Z" fill="#ffd54a" stroke="#fff" stroke-width="1"/><path d="M24 24L12.0 12.0A17 17 0 0 1 24.0 7.0Z" fill="#8e6bff" stroke="#fff" stroke-width="1"/><circle cx="24" cy="24" r="5" fill="#2a303a"/><circle cx="24" cy="24" r="2" fill="#ffd54a"/></svg><h2>عجلة الحظ</h2><span class="chip pts">★ <b class="ptsv">0</b></span></div>
+      <div class="wheelbox">
+        <svg class="ptr" viewBox="-3 -3 46 58" aria-hidden="true"><path d="M20 50L4 20A18 18 0 1 1 36 20Z" fill="#ff5f52" stroke="#2a303a" stroke-width="3" stroke-linejoin="round"/><circle cx="20" cy="18" r="6" fill="#fff" stroke="#2a303a" stroke-width="2"/></svg>
+        <canvas id="wheelCv" width="340" height="340"></canvas>
+        <canvas id="wheelRim" width="400" height="400"></canvas>
+        <div class="hub">★</div>
+      </div>
       <p class="sub" id="spinInfo"></p>
       <button class="big blue" id="bSpin" type="button">شاهد إعلان وأدر العجلة</button>
     </div>
@@ -440,7 +477,7 @@
 
   <div class="panel" id="vBoard" hidden>
     <div class="sheet">
-      <h2>التصنيف</h2>
+      <div class="hd"><svg viewBox="0 0 48 48" aria-hidden="true" stroke="#2a303a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M14 8H34V19C34 26 30 31 24 31S14 26 14 19Z" fill="#ffd54a"/><path d="M14 12H8C8 19 11 22 15 22" fill="none"/><path d="M34 12H40C40 19 37 22 33 22" fill="none"/><rect x="21" y="31" width="6" height="6" fill="#f0b429"/><rect x="14" y="37" width="20" height="6" rx="2" fill="#ff5f52"/><path d="M20 13L24 22" stroke="#fff" stroke-width="2.5" fill="none"/></svg><h2>التصنيف</h2></div>
       <p class="sub" id="boardMsg"></p>
       <button class="big blue" id="bBoardLogin" type="button">تسجيل الدخول</button>
       <div class="blist" id="boardList"></div>
@@ -450,6 +487,7 @@
 
   <div class="panel" id="vAcct" hidden>
     <div class="sheet">
+      <div class="av big" id="acAv">?</div>
       <h2 id="acName"></h2>
       <p class="sub" id="acInfo"></p>
       <button class="big" id="bLogout" type="button">تسجيل الخروج</button>
@@ -590,17 +628,30 @@
   };
 
   var COS = { 1: { skin: 'circle', flag: '' }, 2: { skin: 'circle', flag: '' } };
-  var flagCache = {};
+  var COVER = { circle: 2.06, square: 1.84, hex: 2.14, diamond: 2.34, star: 2.46, heart: 2.4 };
+  var flagSrcCache = {};
   function flagEmoji(cc) { return String.fromCodePoint(0x1F1E6 + cc.charCodeAt(0) - 65, 0x1F1E6 + cc.charCodeAt(1) - 65); }
-  function flagImg(cc) {
-    if (flagCache[cc]) return flagCache[cc];
-    var k = document.createElement('canvas'); k.width = k.height = 128;
+  /* نرسم إيموجي العلم، ونحسب حدود العلم الفعلية، ونأخذ المربع اللي بالنص ليملأ الشكل كله */
+  function flagSrc(cc) {
+    if (flagSrcCache[cc]) return flagSrcCache[cc];
+    var S = 192, k = document.createElement('canvas'); k.width = k.height = S;
     var q = k.getContext('2d');
-    q.font = '96px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif';
+    q.font = '128px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif';
     q.textAlign = 'center'; q.textBaseline = 'middle';
-    q.fillText(flagEmoji(cc), 64, 70);
-    flagCache[cc] = k;
-    return k;
+    q.fillText(flagEmoji(cc), S / 2, S / 2 + 8);
+    var o = { cv: k, sx: 0, sy: 0, sw: S, sh: S };
+    try {
+      var d = q.getImageData(0, 0, S, S).data, x0 = S, y0 = S, x1 = -1, y1 = -1;
+      for (var y = 0; y < S; y++) for (var x = 0; x < S; x++) if (d[(y * S + x) * 4 + 3] > 40) {
+        if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+      }
+      if (x1 > x0 && y1 > y0) {
+        var bw = x1 - x0 + 1, bh = y1 - y0 + 1, side = Math.min(bw, bh) * 0.94;
+        o = { cv: k, sx: x0 + (bw - side) / 2, sy: y0 + (bh - side) / 2, sw: side, sh: side };
+      }
+    } catch (e) {}
+    flagSrcCache[cc] = o;
+    return o;
   }
   function shapePath(c, x, y, R, s) {
     c.beginPath();
@@ -641,12 +692,15 @@
     c.fillStyle = gr;
     shapePath(c, x, y, R, shape); c.fill();
     if (fl) {
-      var img = flagImg(fl), q = R * 0.74;
-      c.save(); shapePath(c, x, y, q, shape); c.clip();
-      c.drawImage(img, x - q, y - q, q * 2, q * 2);
+      var fs = flagSrc(fl), cov = COVER[shape] || 2.1;
+      c.save(); shapePath(c, x, y, R, shape); c.clip();
+      c.drawImage(fs.cv, fs.sx, fs.sy, fs.sw, fs.sh, x - R * cov / 2, y - R * cov / 2, R * cov, R * cov);
+      var gl = c.createLinearGradient(x - R, y - R, x + R, y + R);
+      gl.addColorStop(0, 'rgba(255,255,255,.30)'); gl.addColorStop(0.45, 'rgba(255,255,255,0)'); gl.addColorStop(1, 'rgba(0,0,0,.20)');
+      c.fillStyle = gl; c.fillRect(x - R * 1.3, y - R * 1.3, R * 2.6, R * 2.6);
       c.restore();
-      c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = Math.max(1, R * 0.07);
-      shapePath(c, x, y, q, shape); c.stroke();
+      c.strokeStyle = pal.m; c.lineWidth = Math.max(1.5, R * 0.17);
+      shapePath(c, x, y, R * 0.93, shape); c.stroke();
     } else {
       c.fillStyle = 'rgba(255,255,255,.35)';
       c.beginPath(); c.ellipse(x - R * 0.36, y - R * 0.5, R * 0.3, R * 0.15, -0.6, 0, 6.2832); c.fill();
@@ -1273,7 +1327,17 @@
   var PROD = CFG.products || { arab: 'pack_arab', islamic: 'pack_islamic' };
   var WHEEL_MAX = CFG.wheelPerDay || 5;
   function isNative() { try { return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); } catch (e) { return false; } }
-  function plug(n) { try { return (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins[n]) || null; } catch (e) { return null; } }
+  function plug(n) {
+    try {
+      var C = window.Capacitor;
+      if (!C) return null;
+      if (C.Plugins && C.Plugins[n]) return C.Plugins[n];
+      if (n === 'AdMob') return null;
+      if (C.registerPlugin) return C.registerPlugin(n);
+    } catch (e) {}
+    return null;
+  }
+  function pluginNames() { try { return Object.keys((window.Capacitor && Capacitor.Plugins) || {}).join(', ') || 'لا شي'; } catch (e) { return '?'; } }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
   /* ---------- الكتالوج ---------- */
@@ -1384,8 +1448,8 @@
     };
     if (isNative()) {
       var FA = plug('FirebaseAuthentication');
-      if (!FA) { toast('إضافة الدخول غير موجودة بهذا التطبيق'); return; }
-      FA.signInWithGoogle().then(function (r) {
+      if (!FA) { toast('إضافة الدخول غير موجودة. الموجود: ' + pluginNames()); return; }
+      Promise.resolve().then(function () { return FA.signInWithGoogle(); }).then(function (r) {
         var tok = r && r.credential && r.credential.idToken;
         if (!tok) throw new Error('no-token');
         return firebase.auth().signInWithCredential(firebase.auth.GoogleAuthProvider.credential(tok));
@@ -1436,8 +1500,13 @@
   function paintTop() {
     var a = document.querySelectorAll('.ptsv');
     for (var i = 0; i < a.length; i++) a[i].textContent = P.points;
-    var b = $('bLogin');
-    if (b) b.textContent = user ? ('👤 ' + uname()) : 'تسجيل الدخول';
+    if (!$('whoName')) return;
+    var nm = user ? uname() : 'ضيف';
+    $('whoName').textContent = nm;
+    $('whoSub').textContent = user ? ('فزت أونلاين ' + P.wins + ' مرة من ' + P.games + ' مباراة') : 'سجّل دخولك لتحفظ نقاطك وتدخل التصنيف';
+    $('av').textContent = user ? nm.charAt(0).toUpperCase() : '?';
+    $('bLogin').hidden = !!user;
+    $('profBar').classList.toggle('on', !!user);
   }
 
   /* ---------- الإعلانات (مكافأة) ---------- */
@@ -1541,15 +1610,15 @@
     });
     var h = '';
     list.forEach(function (it, i) {
-      var st = it.eq ? '✓ مُجهّز' : (it.own ? 'جهّز' : (it.k === 'f' && it.g !== 'world' ? '🔒 حزمة' : '★ ' + it.p));
+      var st = it.eq ? '<span class="st ok">✓ مُجهّز</span>' : (it.own ? '<span class="st ok">جهّز</span>' : (it.k === 'f' && it.g !== 'world' ? '<span class="st pr">🔒 حزمة</span>' : '<span class="st pr">★ ' + it.p + '</span>'));
       h += '<button class="item' + (it.own ? '' : ' lock') + (it.eq ? ' eq' : '') + '" data-k="' + it.k + '" data-id="' + it.id + '" type="button">' +
-        '<canvas width="72" height="72" data-i="' + i + '"></canvas><span class="nm">' + esc(it.n) + '</span><span class="st">' + st + '</span></button>';
+        '<canvas width="88" height="88" data-i="' + i + '"></canvas><span class="nm">' + esc(it.n) + '</span>' + st + '</button>';
     });
     $('shopGrid').innerHTML = h;
     var cvs = $('shopGrid').querySelectorAll('canvas');
     for (var i2 = 0; i2 < cvs.length; i2++) {
       var c2 = cvs[i2].getContext('2d'), it2 = list[+cvs[i2].dataset.i];
-      disc(c2, 36, 36, 25, PAL[1], it2.k === 's' ? 2 : 0, 1, it2.cos);
+      disc(c2, 44, 44, 35, PAL[1], it2.k === 's' ? 2 : 0, 1, it2.cos);
     }
   }
   function buyPack(g) {
@@ -1590,20 +1659,40 @@
   var WV = [10, 50, 15, 100, 20, 25, 30, 200], WW = [30, 5, 25, 2.5, 20, 10, 7, 0.5];
   var rot = 0, spinning = false;
   function drawWheel() {
-    var c = $('wheelCv'), gx = c.getContext('2d'), S = c.width, R = S / 2, cols = ['#ff5f52', '#00bff0', '#ebeedc', '#ffd54a'];
+    var c = $('wheelCv'), gx = c.getContext('2d'), S = c.width, R = S / 2;
+    var cols = [['#ff8277', '#e0372a'], ['#4fdcff', '#0095c0'], ['#ffe27a', '#e8a900'], ['#a68bff', '#6a43e0']];
     gx.clearRect(0, 0, S, S);
     for (var i = 0; i < 8; i++) {
-      var a0 = -Math.PI / 2 + i * Math.PI / 4;
-      gx.beginPath(); gx.moveTo(R, R); gx.arc(R, R, R, a0, a0 + Math.PI / 4); gx.closePath();
-      gx.fillStyle = cols[i % 4]; gx.fill();
-      gx.strokeStyle = 'rgba(0,0,0,.35)'; gx.lineWidth = 2; gx.stroke();
+      var a0 = -Math.PI / 2 + i * Math.PI / 4, a1 = a0 + Math.PI / 4, cc = i === 7 ? ['#ff8cc6', '#d3277f'] : cols[i % 4];
+      var gr = gx.createRadialGradient(R, R, R * 0.08, R, R, R);
+      gr.addColorStop(0, cc[0]); gr.addColorStop(1, cc[1]);
+      gx.beginPath(); gx.moveTo(R, R); gx.arc(R, R, R, a0, a1); gx.closePath();
+      gx.fillStyle = gr; gx.fill();
+      gx.strokeStyle = 'rgba(255,255,255,.95)'; gx.lineWidth = 3; gx.stroke();
       gx.save(); gx.translate(R, R); gx.rotate(a0 + Math.PI / 8);
-      gx.fillStyle = (i % 4 === 2 || i % 4 === 3) ? '#2a303a' : '#fff';
-      gx.font = '800 30px "Baloo Bhaijaan 2", sans-serif'; gx.textAlign = 'center'; gx.textBaseline = 'middle';
-      gx.fillText(String(WV[i]), R * 0.66, 0);
+      gx.textAlign = 'center'; gx.textBaseline = 'middle'; gx.lineJoin = 'round';
+      gx.font = '800 40px "Baloo Bhaijaan 2", sans-serif';
+      gx.lineWidth = 8; gx.strokeStyle = '#2a303a'; gx.strokeText(String(WV[i]), R * 0.58, 0);
+      gx.fillStyle = '#fff'; gx.fillText(String(WV[i]), R * 0.58, 0);
+      gx.font = '700 24px sans-serif'; gx.lineWidth = 5;
+      gx.strokeText('★', R * 0.87, 0); gx.fillStyle = '#ffd54a'; gx.fillText('★', R * 0.87, 0);
       gx.restore();
     }
-    gx.beginPath(); gx.arc(R, R, 22, 0, 6.2832); gx.fillStyle = '#2a303a'; gx.fill();
+    var r = $('wheelRim'), g2 = r.getContext('2d'), RS = r.width, RC = RS / 2;
+    g2.clearRect(0, 0, RS, RS);
+    var gold = g2.createLinearGradient(0, 0, RS, RS);
+    gold.addColorStop(0, '#ffe98f'); gold.addColorStop(0.5, '#f0b429'); gold.addColorStop(1, '#b97c00');
+    g2.beginPath(); g2.arc(RC, RC, RC - 4, 0, 6.2832); g2.arc(RC, RC, RC * 0.85, 0, 6.2832, true);
+    g2.fillStyle = gold; g2.fill('evenodd');
+    g2.strokeStyle = '#2a303a'; g2.lineWidth = 7; g2.beginPath(); g2.arc(RC, RC, RC - 4, 0, 6.2832); g2.stroke();
+    g2.lineWidth = 5; g2.beginPath(); g2.arc(RC, RC, RC * 0.85, 0, 6.2832); g2.stroke();
+    for (var b = 0; b < 16; b++) {
+      var ang = b * Math.PI / 8, bx = RC + Math.cos(ang) * RC * 0.925, by = RC + Math.sin(ang) * RC * 0.925;
+      g2.beginPath(); g2.arc(bx, by, 7.5, 0, 6.2832);
+      g2.fillStyle = b % 2 ? '#fff6c2' : '#ffffff'; g2.fill();
+      g2.strokeStyle = '#8a5a00'; g2.lineWidth = 2; g2.stroke();
+      g2.beginPath(); g2.arc(bx - 2, by - 2, 2.4, 0, 6.2832); g2.fillStyle = 'rgba(255,255,255,.95)'; g2.fill();
+    }
   }
   function spinsLeft() {
     var t = today();
@@ -1653,7 +1742,7 @@
       arr.sort(function (a, b) { return b.wins - a.wins || a.games - b.games; });
       var h = '';
       arr.forEach(function (x, i) {
-        h += '<div class="brow' + (user && x.id === user.uid ? ' me' : '') + '"><b class="rk">' + (i + 1) + '</b><span class="nm">' + esc(x.name) + '</span><span class="wn">' + x.wins + ' فوز</span></div>';
+        h += '<div class="brow' + (user && x.id === user.uid ? ' me' : '') + '"><b class="rk' + (i < 3 ? ' r' + (i + 1) : '') + '">' + (i + 1) + '</b><span class="nm">' + esc(x.name) + '</span><span class="wn">' + x.wins + ' فوز</span></div>';
       });
       if (user) msg.textContent = arr.length ? '' : 'لا أحد بالتصنيف بعد. كن الأول!';
       list.innerHTML = h;
@@ -1664,6 +1753,7 @@
   function paintAcct() {
     if (!user) { view('Home'); return; }
     $('acName').textContent = user.displayName || 'حسابي';
+    $('acAv').textContent = uname().charAt(0).toUpperCase();
     $('acInfo').textContent = (user.email || '') + ' — فزت أونلاين ' + P.wins + ' مرة من ' + P.games + ' مباراة.';
   }
 
@@ -1680,7 +1770,8 @@
   $('bShop').addEventListener('click', function () { view('Shop'); });
   $('bWheel').addEventListener('click', function () { view('Wheel'); });
   $('bBoard').addEventListener('click', function () { view('Board'); });
-  $('bLogin').addEventListener('click', function () { if (user) view('Acct'); else login(); });
+  $('bLogin').addEventListener('click', login);
+  $('profBar').addEventListener('click', function () { if (user) view('Acct'); });
   $('bBoardLogin').addEventListener('click', login);
   $('bLogout').addEventListener('click', logout);
   $('bDelAcct').addEventListener('click', deleteAccount);

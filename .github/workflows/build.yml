@@ -48,6 +48,10 @@ jobs:
           grep -n "versionCode\|APPLICATION_ID" android/app/build.gradle android/app/src/main/AndroidManifest.xml || true
 
       - run: npx cap sync android
+      - name: Show registered plugins
+        run: |
+          ls node_modules/@capacitor-firebase node_modules/@capacitor-community 2>&1 || true
+          cat android/app/src/main/assets/capacitor.plugins.json || true
       - run: grep -E "targetSdk|compileSdk|minSdk" android/variables.gradle
 
       - run: chmod +x android/gradlew && cd android && ./gradlew bundleRelease assembleRelease
