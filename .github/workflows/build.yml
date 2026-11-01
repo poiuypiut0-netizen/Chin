@@ -37,8 +37,8 @@ jobs:
           GS_B64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
           ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
         run: |
-          if [ -n "$GS_B64" ]; then
-            echo "$GS_B64" | base64 -d > android/app/google-services.json
+          if [ -f google-services.json ]; then
+            cp google-services.json android/app/google-services.json
           else
             echo "::warning::GOOGLE_SERVICES_JSON_BASE64 not set, Google sign-in will not work"
           fi
